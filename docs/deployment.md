@@ -16,7 +16,7 @@
 - Backend слушает `process.env.PORT`, как ожидают PaaS-платформы.
 - CORS поддерживает `FRONTEND_URL`, `FRONTEND_URLS` и Render subdomains.
 - Prisma Client генерируется на этапе сборки backend-сервиса.
-- Prisma migrations и seed запускаются через Render `preDeployCommand`.
+- Prisma migrations и seed запускаются перед стартом backend-сервиса, потому что `preDeployCommand` недоступен на free tier Render.
 - `.env.production.example` содержит production-переменные.
 
 ## Сервисы в Render Blueprint
@@ -43,7 +43,7 @@ https://edvs-backend.onrender.com/health
 
 Прямая ссылка для запуска Blueprint: <https://render.com/deploy?repo=https://github.com/StepanDrogin/ecommerce-data-visualization-system>.
 
-В `render.yaml` используется `npm ci --include=dev`, потому что на этапе сборки и pre-deploy нужны TypeScript, Nest CLI, Prisma CLI и seed runner.
+В `render.yaml` используется `npm ci --include=dev`, потому что на этапе сборки и запуска нужны TypeScript, Nest CLI, Prisma CLI и seed runner.
 
 Если Render изменит имена сервисов или subdomain, нужно обновить:
 
