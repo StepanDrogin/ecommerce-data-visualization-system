@@ -7,11 +7,13 @@ build/
 .vite/
 coverage/
 *.tsbuildinfo
+outputs/
 
 # Environment
 .env
 .env.*
 !.env.example
+!.env.production.example
 
 # Logs
 *.log

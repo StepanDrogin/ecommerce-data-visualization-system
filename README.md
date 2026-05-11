@@ -1,51 +1,56 @@
 # ecommerce-data-visualization-system
 
-Research and development of an interactive data visualization system for product and order analytics in e-commerce.
+Система интерактивной визуализации данных о товарах и заказах в e-commerce.
 
 ## Назначение проекта
 
-Проект разрабатывается в рамках ВКР на тему:
+Проект разрабатывается в рамках магистерской ВКР на тему:
 
 > Исследование и разработка системы интерактивной визуализации данных о товарах и заказах в e-commerce.
 
-Цель системы - предоставить веб-интерфейс для анализа товарных и заказных данных электронной коммерции с помощью интерактивных графиков, агрегированных показателей и REST API.
+Цель системы - предоставить web-интерфейс для анализа товарных и заказных данных электронной коммерции с помощью интерактивных графиков, агрегированных показателей и REST API.
 
 ## Технологический стек
 
 - Frontend: React, TypeScript, Vite, CSS Modules
+- Визуализация данных: Apache ECharts
 - Backend: NestJS, TypeScript, REST API
 - База данных: PostgreSQL
 - ORM: Prisma
-- Кэширование: Redis
-- Визуализация данных: Apache ECharts
-- Инфраструктура: Docker, Docker Compose
+- Кэширование: Redis / Redis-compatible Key Value
+- Инфраструктура: Docker Compose, Render Blueprint
 - Управление пакетами: npm workspaces
 
 ## Архитектура
 
-Репозиторий организован как монорепозиторий:
+```text
+Client -> API -> Backend -> PostgreSQL
+                       -> Redis
+```
+
+Репозиторий организован как monorepo:
 
 ```text
 apps/
-  frontend/   React-приложение для интерактивного аналитического дашборда
-  backend/    NestJS API для данных о товарах, заказах и аналитике
+  frontend/   React-приложение аналитического dashboard
+  backend/    NestJS API для товаров, заказов и аналитики
 packages/
   shared/     Общие TypeScript-типы для frontend и backend
-docker/       Инфраструктурные материалы
-docs/         Документация по архитектуре и ВКР-контексту
+docker/       Материалы по локальной инфраструктуре
+docs/         Документация по архитектуре и деплою
 ```
 
 Основные доменные области:
 
-- `products` - товары и показатели по товарному каталогу
+- `products` - товары, категории и показатели товарного каталога
 - `orders` - заказы и связанные позиции
 - `analytics` - агрегированные данные для визуализации
 
 ## REST API
 
-В приложении заложены следующие endpoints:
-
 ```text
+GET /
+GET /health
 GET /products
 GET /products/categories
 GET /orders
@@ -64,8 +69,6 @@ dateTo=2026-05-07
 categoryId=electronics
 ```
 
-Сейчас endpoints возвращают демонстрационные данные и выполняют серверную агрегацию в памяти. Prisma-схема и Docker Compose подготовлены для перехода к PostgreSQL и Redis.
-
 ## Локальный запуск
 
 ### 1. Установка зависимостей
@@ -75,8 +78,6 @@ npm install
 ```
 
 ### 2. Переменные окружения
-
-Скопируйте `.env.example` в `.env` и при необходимости измените значения:
 
 ```bash
 cp .env.example .env
@@ -88,23 +89,32 @@ cp .env.example .env
 docker compose up -d postgres redis
 ```
 
-### 4. Запуск backend
+Для Windows нужен установленный и запущенный Docker Desktop с WSL 2 backend.
+
+### 4. Миграции и демонстрационные данные
+
+```bash
+npm run prisma:dev:migrate
+npm run prisma:seed
+```
+
+### 5. Backend
 
 ```bash
 npm run dev:backend
 ```
 
-Backend по умолчанию доступен на `http://localhost:3000`.
+Backend доступен на `http://localhost:3000`.
 
-### 5. Запуск frontend
+### 6. Frontend
 
 ```bash
 npm run dev:frontend
 ```
 
-Frontend по умолчанию доступен на `http://localhost:5173`.
+Frontend доступен на `http://localhost:5173`.
 
-Для проверки production-сборки:
+## Production-сборка
 
 ```bash
 npm run build
@@ -112,17 +122,42 @@ npm run start:backend
 npm run preview:frontend
 ```
 
+## Деплой
+
+Проект подготовлен к деплою на Render:
+
+- `render.yaml` создает frontend, backend, PostgreSQL и Redis-compatible Key Value.
+- `.env.production.example` показывает production-переменные.
+- `docs/deployment.md` описывает деплой и подключение домена.
+
+Базовые URL после деплоя:
+
+```text
+https://edvs-frontend.onrender.com
+https://edvs-backend.onrender.com/health
+```
+
+Для собственного домена рекомендуется схема:
+
+```text
+app.example.com -> frontend
+api.example.com -> backend
+```
+
 ## Скрипты
 
 ```bash
-npm run build          # сборка всех workspace-пакетов
-npm run dev:frontend   # запуск frontend
-npm run dev:backend    # запуск backend
-npm run start:backend  # запуск собранного backend
-npm run preview:frontend # preview собранного frontend
-npm run prisma:generate # генерация Prisma Client
+npm run build             # сборка всех workspace-пакетов
+npm run dev:frontend      # запуск frontend в dev-режиме
+npm run dev:backend       # запуск backend в dev-режиме
+npm run start:backend     # запуск собранного backend
+npm run preview:frontend  # preview собранного frontend
+npm run prisma:generate   # генерация Prisma Client
+npm run prisma:dev:migrate # локальное создание/применение миграций
+npm run prisma:migrate    # применение production-миграций
+npm run prisma:seed       # заполнение демонстрационными данными
 ```
 
 ## Связь с ВКР
 
-Проект демонстрирует практическую часть ВКР: разработку веб-системы, которая объединяет сбор, обработку и интерактивную визуализацию данных о товарах и заказах. Архитектура разделяет пользовательский интерфейс, серверный API, слой данных и общие типы, что позволяет использовать проект как прикладной результат исследования.
+Проект демонстрирует практическую часть исследования: разработку web-системы, которая объединяет обработку данных о товарах и заказах, серверную агрегацию и интерактивную визуализацию. Архитектура разделяет пользовательский интерфейс, REST API, слой данных и общие типы, что позволяет использовать проект как прикладной результат ВКР и основу для дальнейшего развития.
