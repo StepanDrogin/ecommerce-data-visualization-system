@@ -53,11 +53,21 @@ const orderSpecs = [
 ] as const;
 
 async function main() {
-  await prisma.orderItem.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.category.deleteMany();
-  await prisma.user.deleteMany();
+  const existingOrders = await prisma.order.count();
+  const shouldForceSeed = process.env.FORCE_SEED === "true";
+
+  if (existingOrders > 0 && !shouldForceSeed) {
+    console.info(`Seed skipped: database already contains ${existingOrders} orders. Set FORCE_SEED=true to reset demo data.`);
+    return;
+  }
+
+  if (shouldForceSeed) {
+    await prisma.orderItem.deleteMany();
+    await prisma.order.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.category.deleteMany();
+    await prisma.user.deleteMany();
+  }
 
   await prisma.category.createMany({ data: categories });
   await prisma.user.createMany({ data: users });
