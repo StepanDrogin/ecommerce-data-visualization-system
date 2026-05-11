@@ -38,12 +38,16 @@
 .navItem,
 .navItemActive {
   display: block;
+  width: 100%;
   padding: 11px 12px;
   border-radius: 8px;
+  border: 0;
   color: #d1d5db;
-  text-decoration: none;
+  background: transparent;
   font-size: 15px;
   line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
 }
 
 .navItemActive {

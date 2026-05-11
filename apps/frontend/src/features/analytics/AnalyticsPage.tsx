@@ -19,9 +19,9 @@ import type {
   ProductAnalyticsItem,
   SalesPoint,
 } from "@edvs/shared";
+import { apiGet } from "../../api";
 import styles from "./AnalyticsPage.module.css";
 
-const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 echarts.use([BarChart, LineChart, PieChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer]);
 
 type ChartOption = ComposeOption<
@@ -35,7 +35,7 @@ type ChartOption = ComposeOption<
 
 const defaultFilters: Required<Pick<AnalyticsFilters, "dateFrom" | "dateTo">> & Pick<AnalyticsFilters, "categoryId"> = {
   dateFrom: "2026-05-01",
-  dateTo: "2026-05-07",
+  dateTo: "2026-05-11",
   categoryId: "",
 };
 
@@ -63,17 +63,13 @@ export function AnalyticsPage() {
           query.set("categoryId", filters.categoryId);
         }
 
-        const [dashboardResponse, categoriesResponse] = await Promise.all([
-          fetch(`${apiUrl}/analytics/dashboard?${query.toString()}`, { signal: controller.signal }),
-          fetch(`${apiUrl}/products/categories`, { signal: controller.signal }),
+        const [dashboardData, categoryData] = await Promise.all([
+          apiGet<AnalyticsDashboardResponse>(`/analytics/dashboard?${query.toString()}`, controller.signal),
+          apiGet<Category[]>("/products/categories", controller.signal),
         ]);
 
-        if (!dashboardResponse.ok || !categoriesResponse.ok) {
-          throw new Error("Не удалось получить данные аналитики");
-        }
-
-        setDashboard((await dashboardResponse.json()) as AnalyticsDashboardResponse);
-        setCategories((await categoriesResponse.json()) as Category[]);
+        setDashboard(dashboardData);
+        setCategories(categoryData);
       } catch (caughtError) {
         if (caughtError instanceof DOMException && caughtError.name === "AbortError") {
           return;
@@ -100,8 +96,8 @@ export function AnalyticsPage() {
         <div>
           <h2>Интерактивная аналитика товаров и заказов</h2>
           <p>
-            Дашборд показывает агрегированные показатели e-commerce: динамику продаж,
-            структуру категорий и товары, которые дают максимальную выручку.
+            Дашборд показывает ключевые показатели e-commerce: динамику продаж, структуру категорий,
+            топ товаров, средний чек и долю завершенных заказов.
           </p>
         </div>
       </header>
@@ -147,10 +143,10 @@ export function AnalyticsPage() {
       ) : null}
 
       <div className={styles.metricsGrid} aria-busy={isLoading}>
-        <MetricCard label="Выручка" value={summary ? `${formatter.format(summary.totalRevenue)} ₽` : "—"} />
-        <MetricCard label="Заказы" value={summary ? formatter.format(summary.totalOrders) : "—"} />
-        <MetricCard label="Средний чек" value={summary ? `${formatter.format(summary.averageOrderValue)} ₽` : "—"} />
-        <MetricCard label="Завершение" value={summary ? `${summary.conversionRevenueShare}%` : "—"} />
+        <MetricCard label="Выручка" value={summary ? `${formatter.format(summary.totalRevenue)} ₽` : "-"} />
+        <MetricCard label="Заказы" value={summary ? formatter.format(summary.totalOrders) : "-"} />
+        <MetricCard label="Средний чек" value={summary ? `${formatter.format(summary.averageOrderValue)} ₽` : "-"} />
+        <MetricCard label="Завершение" value={summary ? `${summary.conversionRevenueShare}%` : "-"} />
       </div>
 
       {isLoading ? (
@@ -160,7 +156,7 @@ export function AnalyticsPage() {
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
               <h3>Динамика продаж</h3>
-              <span>Линейный график</span>
+              <span>выручка и заказы</span>
             </div>
             <SalesChart data={dashboard?.sales ?? []} />
           </article>
@@ -168,7 +164,7 @@ export function AnalyticsPage() {
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
               <h3>Структура категорий</h3>
-              <span>Круговая диаграмма</span>
+              <span>доля выручки</span>
             </div>
             <CategoryChart data={dashboard?.categories ?? []} />
           </article>
@@ -176,7 +172,7 @@ export function AnalyticsPage() {
           <article className={styles.panelWide}>
             <div className={styles.panelHeader}>
               <h3>Товары по выручке</h3>
-              <span>Столбчатая диаграмма</span>
+              <span>top products</span>
             </div>
             <ProductsChart data={dashboard?.products ?? []} />
           </article>
@@ -184,7 +180,7 @@ export function AnalyticsPage() {
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
               <h3>Детализация товаров</h3>
-              <span>Top products</span>
+              <span>выручка и штуки</span>
             </div>
             <ProductList products={dashboard?.products ?? []} />
           </article>
@@ -212,7 +208,7 @@ function SalesChart({ data }: { data: SalesPoint[] }) {
   const option = useMemo<ChartOption>(
     () => ({
       color: ["#2563eb", "#16a34a"],
-      grid: { top: 24, right: 16, bottom: 32, left: 52 },
+      grid: { top: 24, right: 16, bottom: 32, left: 58 },
       tooltip: { trigger: "axis" },
       legend: { bottom: 0, textStyle: { color: "#475467" } },
       xAxis: {
@@ -232,13 +228,13 @@ function SalesChart({ data }: { data: SalesPoint[] }) {
     [data],
   );
 
-  return <Chart option={option} ariaLabel="Линейный график динамики продаж" />;
+  return <Chart option={option} ariaLabel="График динамики продаж" />;
 }
 
 function CategoryChart({ data }: { data: CategoryAnalyticsItem[] }) {
   const option = useMemo<ChartOption>(
     () => ({
-      color: ["#2563eb", "#16a34a", "#f59e0b", "#db2777"],
+      color: ["#2563eb", "#16a34a", "#f59e0b", "#db2777", "#7c3aed"],
       tooltip: { trigger: "item", formatter: "{b}: {c} ₽ ({d}%)" },
       series: [
         {
@@ -253,19 +249,19 @@ function CategoryChart({ data }: { data: CategoryAnalyticsItem[] }) {
     [data],
   );
 
-  return <Chart option={option} ariaLabel="Круговая диаграмма структуры категорий" />;
+  return <Chart option={option} ariaLabel="Диаграмма структуры категорий" />;
 }
 
 function ProductsChart({ data }: { data: ProductAnalyticsItem[] }) {
   const option = useMemo<ChartOption>(
     () => ({
       color: ["#2563eb"],
-      grid: { top: 20, right: 18, bottom: 50, left: 72 },
+      grid: { top: 20, right: 18, bottom: 62, left: 78 },
       tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
       xAxis: {
         type: "category",
         data: data.map((item) => item.productName),
-        axisLabel: { rotate: 20, interval: 0 },
+        axisLabel: { rotate: 24, interval: 0 },
         axisLine: { lineStyle: { color: "#cbd5e1" } },
       },
       yAxis: { type: "value", axisLine: { show: false }, splitLine: { lineStyle: { color: "#e5edf7" } } },
@@ -274,7 +270,7 @@ function ProductsChart({ data }: { data: ProductAnalyticsItem[] }) {
     [data],
   );
 
-  return <Chart option={option} ariaLabel="Столбчатая диаграмма товаров по выручке" />;
+  return <Chart option={option} ariaLabel="Диаграмма товаров по выручке" />;
 }
 
 function ProductList({ products }: { products: ProductAnalyticsItem[] }) {
