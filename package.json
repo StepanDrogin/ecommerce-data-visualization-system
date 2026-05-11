@@ -13,10 +13,17 @@
     "dev:backend": "npm run start:dev -w @edvs/backend",
     "start:backend": "npm run start -w @edvs/backend",
     "preview:frontend": "npm run preview -w @edvs/frontend",
-    "prisma:generate": "npm run prisma:generate -w @edvs/backend"
+    "prisma:generate": "npm run prisma:generate -w @edvs/backend",
+    "prisma:migrate": "npm run prisma:migrate -w @edvs/backend",
+    "prisma:dev:migrate": "npm run prisma:dev:migrate -w @edvs/backend",
+    "prisma:seed": "npm run prisma:seed -w @edvs/backend",
+    "test": "vitest run"
   },
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.5"
   }
 }
