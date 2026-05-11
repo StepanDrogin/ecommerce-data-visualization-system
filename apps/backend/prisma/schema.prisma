@@ -7,22 +7,33 @@ datasource db {
 }
 
 model Product {
-  id        String      @id @default(uuid())
-  name      String
-  category  String
-  price     Decimal
-  stock     Int
-  createdAt DateTime    @default(now())
+  id         String      @id @default(uuid())
+  name       String
+  price      Decimal
+  stock      Int
+  status     ProductStatus @default(AVAILABLE)
+  createdAt  DateTime    @default(now())
+  categoryId String
+  category   Category    @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
+
+  @@index([categoryId])
+  @@index([createdAt])
 }
 
 model Order {
   id           String      @id @default(uuid())
-  customerName String
+  userId       String
   status       OrderStatus @default(CREATED)
+  paymentMethod PaymentMethod @default(CARD)
   totalAmount  Decimal
   createdAt    DateTime    @default(now())
+  user         User        @relation(fields: [userId], references: [id])
   items        OrderItem[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([status])
 }
 
 model OrderItem {
@@ -33,6 +44,23 @@ model OrderItem {
   price     Decimal
   order     Order   @relation(fields: [orderId], references: [id])
   product   Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  products  Product[]
 }
 
 enum OrderStatus {
@@ -41,4 +69,16 @@ enum OrderStatus {
   SHIPPED
   COMPLETED
   CANCELLED
+}
+
+enum ProductStatus {
+  AVAILABLE
+  OUT_OF_STOCK
+  ARCHIVED
+}
+
+enum PaymentMethod {
+  CARD
+  CASH
+  BANK_TRANSFER
 }
