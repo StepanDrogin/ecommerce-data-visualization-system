@@ -2,7 +2,9 @@
 
 Система интерактивной визуализации данных о товарах и заказах в e-commerce.
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/StepanDrogin/ecommerce-data-visualization-system)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/StepanDrogin/ecommerce-data-visualization-system)
+
+> Основной бесплатный вариант публикации без привязки карты: Vercel + внешний PostgreSQL. Render Blueprint оставлен как альтернативный вариант, но managed PostgreSQL/Redis в Render может потребовать billing-профиль.
 
 ## Назначение проекта
 
@@ -21,6 +23,7 @@
 - ORM: Prisma
 - Кэширование: Redis / Redis-compatible Key Value
 - Инфраструктура: Docker Compose, Render Blueprint
+- Production-деплой: Vercel, внешний PostgreSQL, опциональный Redis
 - Управление пакетами: npm workspaces
 
 ## Архитектура

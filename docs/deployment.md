@@ -1,6 +1,54 @@
 # Деплой проекта
 
-Документ описывает базовый сценарий публикации ВКР-приложения в интернете. Основной вариант - Render Blueprint: один `render.yaml` создает frontend, backend, PostgreSQL и Redis-compatible Key Value.
+Документ описывает базовый сценарий публикации ВКР-приложения в интернете. Основной вариант без привязки карты - Vercel для frontend и serverless backend, а PostgreSQL подключается как внешний managed-сервис через `DATABASE_URL`. Render Blueprint оставлен как альтернативный вариант, но managed PostgreSQL/Redis в Render может потребовать billing-профиль.
+
+## Вариант без карты: Vercel + внешний PostgreSQL
+
+### Что уже подготовлено
+
+- `vercel.json` в корне репозитория.
+- `api/index.ts` поднимает NestJS как Vercel Function.
+- Frontend собирается в `apps/frontend/dist`.
+- Frontend обращается к backend через относительный путь `/api`.
+- Redis в production опционален: если `REDIS_URL` не задан, backend использует in-memory fallback cache.
+- Prisma Client генерируется на этапе build.
+- Prisma migrations и безопасный seed запускаются в `vercel:build`.
+
+### Переменные Vercel
+
+В Vercel нужно добавить переменные для Production:
+
+```text
+DATABASE_URL=postgresql://...
+VITE_API_URL=/api
+FRONTEND_URL=https://your-project.vercel.app
+FRONTEND_URLS=https://your-project.vercel.app
+ALLOW_VERCEL_SUBDOMAINS=true
+ALLOW_RENDER_SUBDOMAINS=false
+NODE_ENV=production
+```
+
+`REDIS_URL` можно не задавать на первом деплое.
+
+### Порядок деплоя на Vercel
+
+1. Создать бесплатную PostgreSQL-базу в Supabase или Neon.
+2. Скопировать connection string и добавить его в Vercel как `DATABASE_URL`.
+3. В Vercel открыть **Add New -> Project**.
+4. Выбрать GitHub-репозиторий `StepanDrogin/ecommerce-data-visualization-system`.
+5. Framework Preset оставить **Other**.
+6. Build Command оставить из `vercel.json`: `npm run vercel:build`.
+7. Output Directory оставить из `vercel.json`: `apps/frontend/dist`.
+8. Нажать **Deploy**.
+9. После деплоя проверить:
+
+```text
+https://your-project.vercel.app
+https://your-project.vercel.app/api/health
+https://your-project.vercel.app/api/products
+```
+
+## Альтернативный вариант: Render
 
 ## Почему Render
 
@@ -8,6 +56,7 @@
 - Позволяет развернуть static frontend и Node.js backend из одного monorepo.
 - Дает managed PostgreSQL и Redis-compatible Key Value рядом с backend.
 - Позволяет подключить бесплатный `onrender.com` subdomain или собственный домен.
+- Для managed PostgreSQL/Redis может потребоваться billing-профиль.
 
 ## Что уже подготовлено
 
