@@ -7,12 +7,12 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  findAll(): Product[] {
+  findAll(): Promise<Product[]> {
     return this.productsService.findAll();
   }
 
   @Get("categories")
-  findCategories(): Category[] {
+  findCategories(): Promise<Category[]> {
     return this.productsService.findCategories();
   }
 }

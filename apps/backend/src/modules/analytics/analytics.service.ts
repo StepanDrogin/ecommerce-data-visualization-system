@@ -8,51 +8,60 @@ import type {
   ProductAnalyticsItem,
   SalesPoint,
 } from "@edvs/shared";
-import { orders, products } from "../../data/demo-data";
+import { toOrder, toProduct } from "../../mappers";
+import { PrismaService } from "../../prisma/prisma.service";
+import { AnalyticsCacheService } from "./analytics-cache.service";
 
 @Injectable()
 export class AnalyticsService {
-  private readonly cache = new Map<string, AnalyticsDashboardResponse>();
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: AnalyticsCacheService,
+  ) {}
 
-  getDashboard(filters: AnalyticsFilters = {}): AnalyticsDashboardResponse {
+  async getDashboard(filters: AnalyticsFilters = {}): Promise<AnalyticsDashboardResponse> {
     const normalizedFilters = this.normalizeFilters(filters);
     const cacheKey = JSON.stringify(normalizedFilters);
-    const cached = this.cache.get(cacheKey);
+    const cached = await this.cache.get<AnalyticsDashboardResponse>(cacheKey);
 
     if (cached) {
       return cached;
     }
 
+    const [orders, products] = await Promise.all([
+      this.getFilteredOrders(normalizedFilters),
+      this.getFilteredProducts(normalizedFilters),
+    ]);
+
     const response: AnalyticsDashboardResponse = {
       filters: normalizedFilters,
-      summary: this.buildSummary(normalizedFilters),
-      sales: this.buildSales(normalizedFilters),
-      products: this.buildProductAnalytics(normalizedFilters),
-      categories: this.buildCategoryAnalytics(normalizedFilters),
+      summary: this.buildSummary(normalizedFilters, orders, products.length),
+      sales: this.buildSales(orders),
+      products: this.buildProductAnalytics(normalizedFilters, orders),
+      categories: this.buildCategoryAnalytics(normalizedFilters, orders),
     };
 
-    this.cache.set(cacheKey, response);
+    await this.cache.set(cacheKey, response);
     return response;
   }
 
-  getSummary(filters: AnalyticsFilters = {}): AnalyticsSummary {
-    return this.getDashboard(filters).summary;
+  async getSummary(filters: AnalyticsFilters = {}): Promise<AnalyticsSummary> {
+    return (await this.getDashboard(filters)).summary;
   }
 
-  getSales(filters: AnalyticsFilters = {}): SalesPoint[] {
-    return this.getDashboard(filters).sales;
+  async getSales(filters: AnalyticsFilters = {}): Promise<SalesPoint[]> {
+    return (await this.getDashboard(filters)).sales;
   }
 
-  getProductAnalytics(filters: AnalyticsFilters = {}): ProductAnalyticsItem[] {
-    return this.getDashboard(filters).products;
+  async getProductAnalytics(filters: AnalyticsFilters = {}): Promise<ProductAnalyticsItem[]> {
+    return (await this.getDashboard(filters)).products;
   }
 
-  getCategoryAnalytics(filters: AnalyticsFilters = {}): CategoryAnalyticsItem[] {
-    return this.getDashboard(filters).categories;
+  async getCategoryAnalytics(filters: AnalyticsFilters = {}): Promise<CategoryAnalyticsItem[]> {
+    return (await this.getDashboard(filters)).categories;
   }
 
-  private buildSummary(filters: AnalyticsFilters): AnalyticsSummary {
-    const filteredOrders = this.getFilteredOrders(filters);
+  private buildSummary(_filters: AnalyticsFilters, filteredOrders: Order[], productCount: number): AnalyticsSummary {
     const revenueOrders = filteredOrders.filter((order) => order.status !== "cancelled");
     const totalRevenue = revenueOrders.reduce((sum, order) => sum + order.totalAmount, 0);
     const completedOrders = filteredOrders.filter((order) => order.status === "completed").length;
@@ -60,17 +69,17 @@ export class AnalyticsService {
     return {
       totalRevenue,
       totalOrders: filteredOrders.length,
-      totalProducts: this.getFilteredProducts(filters).length,
+      totalProducts: productCount,
       averageOrderValue: revenueOrders.length === 0 ? 0 : Math.round(totalRevenue / revenueOrders.length),
       completedOrders,
       conversionRevenueShare: filteredOrders.length === 0 ? 0 : Math.round((completedOrders / filteredOrders.length) * 100),
     };
   }
 
-  private buildSales(filters: AnalyticsFilters): SalesPoint[] {
+  private buildSales(orders: Order[]): SalesPoint[] {
     const grouped = new Map<string, SalesPoint>();
 
-    for (const order of this.getFilteredOrders(filters).filter((item) => item.status !== "cancelled")) {
+    for (const order of orders.filter((item) => item.status !== "cancelled")) {
       const date = order.createdAt.slice(0, 10);
       const current = grouped.get(date) ?? { date, revenue: 0, orders: 0 };
       current.revenue += order.totalAmount;
@@ -81,10 +90,10 @@ export class AnalyticsService {
     return [...grouped.values()].sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  private buildProductAnalytics(filters: AnalyticsFilters): ProductAnalyticsItem[] {
+  private buildProductAnalytics(filters: AnalyticsFilters, orders: Order[]): ProductAnalyticsItem[] {
     const grouped = new Map<string, ProductAnalyticsItem>();
 
-    for (const order of this.getFilteredOrders(filters).filter((item) => item.status !== "cancelled")) {
+    for (const order of orders.filter((item) => item.status !== "cancelled")) {
       for (const item of order.items) {
         if (filters.categoryId && item.categoryId !== filters.categoryId) {
           continue;
@@ -108,10 +117,10 @@ export class AnalyticsService {
     return [...grouped.values()].sort((a, b) => b.revenue - a.revenue);
   }
 
-  private buildCategoryAnalytics(filters: AnalyticsFilters): CategoryAnalyticsItem[] {
+  private buildCategoryAnalytics(filters: AnalyticsFilters, orders: Order[]): CategoryAnalyticsItem[] {
     const grouped = new Map<string, CategoryAnalyticsItem>();
 
-    for (const product of this.buildProductAnalytics(filters)) {
+    for (const product of this.buildProductAnalytics(filters, orders)) {
       const current = grouped.get(product.categoryId) ?? {
         categoryId: product.categoryId,
         categoryName: product.categoryName,
@@ -127,20 +136,59 @@ export class AnalyticsService {
     return [...grouped.values()].sort((a, b) => b.revenue - a.revenue);
   }
 
-  private getFilteredOrders(filters: AnalyticsFilters): Order[] {
-    return orders.filter((order) => {
-      const orderDate = order.createdAt.slice(0, 10);
-      const matchesDateFrom = !filters.dateFrom || orderDate >= filters.dateFrom;
-      const matchesDateTo = !filters.dateTo || orderDate <= filters.dateTo;
-      const matchesCategory =
-        !filters.categoryId || order.items.some((item) => item.categoryId === filters.categoryId);
-
-      return matchesDateFrom && matchesDateTo && matchesCategory;
+  private async getFilteredOrders(filters: AnalyticsFilters): Promise<Order[]> {
+    const orders = await this.prisma.order.findMany({
+      where: {
+        createdAt: this.dateRange(filters),
+        items: filters.categoryId
+          ? {
+              some: {
+                product: {
+                  categoryId: filters.categoryId,
+                },
+              },
+            }
+          : undefined,
+      },
+      include: {
+        user: true,
+        items: {
+          include: {
+            product: {
+              include: {
+                category: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "asc" },
     });
+
+    return orders.map(toOrder);
   }
 
-  private getFilteredProducts(filters: AnalyticsFilters) {
-    return products.filter((product) => !filters.categoryId || product.categoryId === filters.categoryId);
+  private async getFilteredProducts(filters: AnalyticsFilters) {
+    const products = await this.prisma.product.findMany({
+      where: {
+        categoryId: filters.categoryId,
+      },
+      include: { category: true },
+      orderBy: { name: "asc" },
+    });
+
+    return products.map(toProduct);
+  }
+
+  private dateRange(filters: AnalyticsFilters) {
+    if (!filters.dateFrom && !filters.dateTo) {
+      return undefined;
+    }
+
+    return {
+      gte: filters.dateFrom ? new Date(`${filters.dateFrom}T00:00:00.000Z`) : undefined,
+      lte: filters.dateTo ? new Date(`${filters.dateTo}T23:59:59.999Z`) : undefined,
+    };
   }
 
   private normalizeFilters(filters: AnalyticsFilters): AnalyticsFilters {

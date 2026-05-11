@@ -14,27 +14,27 @@ export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
   @Get("dashboard")
-  getDashboard(@Query() filters: AnalyticsFilters): AnalyticsDashboardResponse {
+  getDashboard(@Query() filters: AnalyticsFilters): Promise<AnalyticsDashboardResponse> {
     return this.analyticsService.getDashboard(filters);
   }
 
   @Get("summary")
-  getSummary(@Query() filters: AnalyticsFilters): AnalyticsSummary {
+  getSummary(@Query() filters: AnalyticsFilters): Promise<AnalyticsSummary> {
     return this.analyticsService.getSummary(filters);
   }
 
   @Get("sales")
-  getSales(@Query() filters: AnalyticsFilters): SalesPoint[] {
+  getSales(@Query() filters: AnalyticsFilters): Promise<SalesPoint[]> {
     return this.analyticsService.getSales(filters);
   }
 
   @Get("products")
-  getProductAnalytics(@Query() filters: AnalyticsFilters): ProductAnalyticsItem[] {
+  getProductAnalytics(@Query() filters: AnalyticsFilters): Promise<ProductAnalyticsItem[]> {
     return this.analyticsService.getProductAnalytics(filters);
   }
 
   @Get("categories")
-  getCategoryAnalytics(@Query() filters: AnalyticsFilters): CategoryAnalyticsItem[] {
+  getCategoryAnalytics(@Query() filters: AnalyticsFilters): Promise<CategoryAnalyticsItem[]> {
     return this.analyticsService.getCategoryAnalytics(filters);
   }
 }

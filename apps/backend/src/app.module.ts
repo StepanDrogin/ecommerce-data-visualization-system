@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { AppController } from "./app.controller";
 import { AnalyticsModule } from "./modules/analytics/analytics.module";
 import { OrdersModule } from "./modules/orders/orders.module";
 import { ProductsModule } from "./modules/products/products.module";
@@ -13,5 +14,6 @@ import { PrismaModule } from "./prisma/prisma.module";
     OrdersModule,
     AnalyticsModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}

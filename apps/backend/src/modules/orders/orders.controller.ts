@@ -7,7 +7,7 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Get()
-  findAll(): Order[] {
+  findAll(): Promise<Order[]> {
     return this.ordersService.findAll();
   }
 }
