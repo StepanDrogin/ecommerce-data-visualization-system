@@ -1,89 +1,195 @@
-import type { AnalyticsSummary, ProductAnalyticsItem, SalesPoint } from "@edvs/shared";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { BarChart, LineChart, PieChart, type BarSeriesOption, type LineSeriesOption, type PieSeriesOption } from "echarts/charts";
+import {
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+  type GridComponentOption,
+  type LegendComponentOption,
+  type TooltipComponentOption,
+} from "echarts/components";
+import * as echarts from "echarts/core";
+import type { ComposeOption } from "echarts/core";
+import { CanvasRenderer } from "echarts/renderers";
+import type {
+  AnalyticsDashboardResponse,
+  AnalyticsFilters,
+  Category,
+  CategoryAnalyticsItem,
+  ProductAnalyticsItem,
+  SalesPoint,
+} from "@edvs/shared";
 import styles from "./AnalyticsPage.module.css";
 
-const summary: AnalyticsSummary = {
-  totalRevenue: 1284000,
-  totalOrders: 342,
-  totalProducts: 86,
-  averageOrderValue: 3754,
+const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+echarts.use([BarChart, LineChart, PieChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer]);
+
+type ChartOption = ComposeOption<
+  | BarSeriesOption
+  | LineSeriesOption
+  | PieSeriesOption
+  | GridComponentOption
+  | LegendComponentOption
+  | TooltipComponentOption
+>;
+
+const defaultFilters: Required<Pick<AnalyticsFilters, "dateFrom" | "dateTo">> & Pick<AnalyticsFilters, "categoryId"> = {
+  dateFrom: "2026-05-01",
+  dateTo: "2026-05-07",
+  categoryId: "",
 };
-
-const sales: SalesPoint[] = [
-  { date: "2026-05-01", revenue: 142000, orders: 38 },
-  { date: "2026-05-02", revenue: 168000, orders: 44 },
-  { date: "2026-05-03", revenue: 156000, orders: 40 },
-  { date: "2026-05-04", revenue: 214000, orders: 57 },
-];
-
-const topProducts: ProductAnalyticsItem[] = [
-  { productId: "p-1", productName: "Smart Watch S2", category: "Electronics", revenue: 314000, unitsSold: 48 },
-  { productId: "p-2", productName: "Coffee Machine Pro", category: "Home", revenue: 268000, unitsSold: 22 },
-  { productId: "p-3", productName: "Wireless Headphones", category: "Electronics", revenue: 196000, unitsSold: 64 },
-];
 
 const formatter = new Intl.NumberFormat("ru-RU");
 
 export function AnalyticsPage() {
+  const [filters, setFilters] = useState(defaultFilters);
+  const [dashboard, setDashboard] = useState<AnalyticsDashboardResponse | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadData() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const query = new URLSearchParams();
+        query.set("dateFrom", filters.dateFrom);
+        query.set("dateTo", filters.dateTo);
+        if (filters.categoryId) {
+          query.set("categoryId", filters.categoryId);
+        }
+
+        const [dashboardResponse, categoriesResponse] = await Promise.all([
+          fetch(`${apiUrl}/analytics/dashboard?${query.toString()}`, { signal: controller.signal }),
+          fetch(`${apiUrl}/products/categories`, { signal: controller.signal }),
+        ]);
+
+        if (!dashboardResponse.ok || !categoriesResponse.ok) {
+          throw new Error("Не удалось получить данные аналитики");
+        }
+
+        setDashboard((await dashboardResponse.json()) as AnalyticsDashboardResponse);
+        setCategories((await categoriesResponse.json()) as Category[]);
+      } catch (caughtError) {
+        if (caughtError instanceof DOMException && caughtError.name === "AbortError") {
+          return;
+        }
+
+        setError(caughtError instanceof Error ? caughtError.message : "Неизвестная ошибка загрузки");
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadData();
+
+    return () => controller.abort();
+  }, [filters]);
+
+  const summary = dashboard?.summary;
+
   return (
     <section className={styles.page} id="analytics">
       <header className={styles.header}>
         <div>
           <h2>Интерактивная аналитика товаров и заказов</h2>
           <p>
-            Стартовый экран фиксирует структуру будущего дашборда: ключевые метрики,
-            динамику продаж и рейтинг товаров.
+            Дашборд показывает агрегированные показатели e-commerce: динамику продаж,
+            структуру категорий и товары, которые дают максимальную выручку.
           </p>
         </div>
       </header>
 
-      <div className={styles.metricsGrid}>
-        <MetricCard label="Выручка" value={`${formatter.format(summary.totalRevenue)} ₽`} />
-        <MetricCard label="Заказы" value={formatter.format(summary.totalOrders)} />
-        <MetricCard label="Товары" value={formatter.format(summary.totalProducts)} />
-        <MetricCard label="Средний чек" value={`${formatter.format(summary.averageOrderValue)} ₽`} />
+      <form className={styles.filters} aria-label="Фильтры аналитики">
+        <label>
+          <span>Начало периода</span>
+          <input
+            type="date"
+            value={filters.dateFrom}
+            onChange={(event) => setFilters((current) => ({ ...current, dateFrom: event.target.value }))}
+          />
+        </label>
+        <label>
+          <span>Конец периода</span>
+          <input
+            type="date"
+            value={filters.dateTo}
+            onChange={(event) => setFilters((current) => ({ ...current, dateTo: event.target.value }))}
+          />
+        </label>
+        <label>
+          <span>Категория</span>
+          <select
+            value={filters.categoryId}
+            onChange={(event) => setFilters((current) => ({ ...current, categoryId: event.target.value }))}
+          >
+            <option value="">Все категории</option>
+            {categories.map((category) => (
+              <option value={category.id} key={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </form>
+
+      {error ? (
+        <div className={styles.errorState} role="alert">
+          <strong>Данные не загрузились</strong>
+          <span>{error}</span>
+        </div>
+      ) : null}
+
+      <div className={styles.metricsGrid} aria-busy={isLoading}>
+        <MetricCard label="Выручка" value={summary ? `${formatter.format(summary.totalRevenue)} ₽` : "—"} />
+        <MetricCard label="Заказы" value={summary ? formatter.format(summary.totalOrders) : "—"} />
+        <MetricCard label="Средний чек" value={summary ? `${formatter.format(summary.averageOrderValue)} ₽` : "—"} />
+        <MetricCard label="Завершение" value={summary ? `${summary.conversionRevenueShare}%` : "—"} />
       </div>
 
-      <div className={styles.dashboardGrid}>
-        <article className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h3>Динамика продаж</h3>
-            <span>Apache ECharts placeholder</span>
-          </div>
-          <div className={styles.chartPlaceholder} role="img" aria-label="Заготовка графика динамики продаж">
-            {sales.map((point) => (
-              <div className={styles.barGroup} key={point.date}>
-                <div
-                  className={styles.bar}
-                  style={{ height: `${Math.max(24, point.orders)}%` }}
-                  title={`${point.date}: ${formatter.format(point.revenue)} ₽`}
-                />
-                <span>{point.date.slice(5)}</span>
-              </div>
-            ))}
-          </div>
-        </article>
+      {isLoading ? (
+        <div className={styles.loadingState}>Загрузка аналитики...</div>
+      ) : (
+        <div className={styles.dashboardGrid}>
+          <article className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h3>Динамика продаж</h3>
+              <span>Линейный график</span>
+            </div>
+            <SalesChart data={dashboard?.sales ?? []} />
+          </article>
 
-        <article className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h3>Товары по выручке</h3>
-            <span>Top products</span>
-          </div>
-          <div className={styles.productList}>
-            {topProducts.map((product) => (
-              <div className={styles.productRow} key={product.productId}>
-                <div>
-                  <strong>{product.productName}</strong>
-                  <span>{product.category}</span>
-                </div>
-                <div className={styles.productValue}>
-                  <strong>{formatter.format(product.revenue)} ₽</strong>
-                  <span>{product.unitsSold} шт.</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </article>
-      </div>
+          <article className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h3>Структура категорий</h3>
+              <span>Круговая диаграмма</span>
+            </div>
+            <CategoryChart data={dashboard?.categories ?? []} />
+          </article>
+
+          <article className={styles.panelWide}>
+            <div className={styles.panelHeader}>
+              <h3>Товары по выручке</h3>
+              <span>Столбчатая диаграмма</span>
+            </div>
+            <ProductsChart data={dashboard?.products ?? []} />
+          </article>
+
+          <article className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h3>Детализация товаров</h3>
+              <span>Top products</span>
+            </div>
+            <ProductList products={dashboard?.products ?? []} />
+          </article>
+        </div>
+      )}
     </section>
   );
 }
@@ -100,4 +206,119 @@ function MetricCard({ label, value }: MetricCardProps) {
       <strong>{value}</strong>
     </article>
   );
+}
+
+function SalesChart({ data }: { data: SalesPoint[] }) {
+  const option = useMemo<ChartOption>(
+    () => ({
+      color: ["#2563eb", "#16a34a"],
+      grid: { top: 24, right: 16, bottom: 32, left: 52 },
+      tooltip: { trigger: "axis" },
+      legend: { bottom: 0, textStyle: { color: "#475467" } },
+      xAxis: {
+        type: "category",
+        data: data.map((point) => point.date.slice(5)),
+        axisLine: { lineStyle: { color: "#cbd5e1" } },
+      },
+      yAxis: [
+        { type: "value", name: "₽", axisLine: { show: false }, splitLine: { lineStyle: { color: "#e5edf7" } } },
+        { type: "value", name: "шт.", axisLine: { show: false }, splitLine: { show: false } },
+      ],
+      series: [
+        { name: "Выручка", type: "bar", data: data.map((point) => point.revenue), barMaxWidth: 34 },
+        { name: "Заказы", type: "line", yAxisIndex: 1, smooth: true, data: data.map((point) => point.orders) },
+      ],
+    }),
+    [data],
+  );
+
+  return <Chart option={option} ariaLabel="Линейный график динамики продаж" />;
+}
+
+function CategoryChart({ data }: { data: CategoryAnalyticsItem[] }) {
+  const option = useMemo<ChartOption>(
+    () => ({
+      color: ["#2563eb", "#16a34a", "#f59e0b", "#db2777"],
+      tooltip: { trigger: "item", formatter: "{b}: {c} ₽ ({d}%)" },
+      series: [
+        {
+          name: "Категории",
+          type: "pie",
+          radius: ["48%", "72%"],
+          avoidLabelOverlap: true,
+          data: data.map((item) => ({ value: item.revenue, name: item.categoryName })),
+        },
+      ],
+    }),
+    [data],
+  );
+
+  return <Chart option={option} ariaLabel="Круговая диаграмма структуры категорий" />;
+}
+
+function ProductsChart({ data }: { data: ProductAnalyticsItem[] }) {
+  const option = useMemo<ChartOption>(
+    () => ({
+      color: ["#2563eb"],
+      grid: { top: 20, right: 18, bottom: 50, left: 72 },
+      tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+      xAxis: {
+        type: "category",
+        data: data.map((item) => item.productName),
+        axisLabel: { rotate: 20, interval: 0 },
+        axisLine: { lineStyle: { color: "#cbd5e1" } },
+      },
+      yAxis: { type: "value", axisLine: { show: false }, splitLine: { lineStyle: { color: "#e5edf7" } } },
+      series: [{ name: "Выручка", type: "bar", data: data.map((item) => item.revenue), barMaxWidth: 42 }],
+    }),
+    [data],
+  );
+
+  return <Chart option={option} ariaLabel="Столбчатая диаграмма товаров по выручке" />;
+}
+
+function ProductList({ products }: { products: ProductAnalyticsItem[] }) {
+  if (products.length === 0) {
+    return <div className={styles.emptyState}>Нет данных для выбранных фильтров</div>;
+  }
+
+  return (
+    <div className={styles.productList}>
+      {products.map((product) => (
+        <div className={styles.productRow} key={product.productId}>
+          <div>
+            <strong>{product.productName}</strong>
+            <span>{product.categoryName}</span>
+          </div>
+          <div className={styles.productValue}>
+            <strong>{formatter.format(product.revenue)} ₽</strong>
+            <span>{product.unitsSold} шт.</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Chart({ option, ariaLabel }: { option: ChartOption; ariaLabel: string }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) {
+      return;
+    }
+
+    const chart = echarts.init(containerRef.current);
+    chart.setOption(option);
+
+    const resizeObserver = new ResizeObserver(() => chart.resize());
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+      chart.dispose();
+    };
+  }, [option]);
+
+  return <div className={styles.chart} ref={containerRef} role="img" aria-label={ariaLabel} />;
 }

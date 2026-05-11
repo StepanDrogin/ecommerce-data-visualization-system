@@ -6,4 +6,14 @@ export default defineConfig({
   server: {
     port: Number(process.env.FRONTEND_PORT ?? 5173),
   },
+  build: {
+    chunkSizeWarningLimit: 650,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          echarts: ["echarts/core", "echarts/charts", "echarts/components", "echarts/renderers"],
+        },
+      },
+    },
+  },
 });
