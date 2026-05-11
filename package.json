@@ -1,0 +1,20 @@
+{
+  "name": "ecommerce-data-visualization-system",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Research and development of an interactive data visualization system for product and order analytics in e-commerce.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @edvs/shared && npm run build -w @edvs/backend && npm run build -w @edvs/frontend",
+    "dev:frontend": "npm run dev -w @edvs/frontend",
+    "dev:backend": "npm run start:dev -w @edvs/backend",
+    "prisma:generate": "npm run prisma:generate -w @edvs/backend"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
