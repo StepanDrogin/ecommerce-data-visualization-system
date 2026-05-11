@@ -1,0 +1,171 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.header h2 {
+  margin: 0 0 10px;
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.header p {
+  margin: 0;
+  max-width: 720px;
+  color: #667085;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.metricCard,
+.panel {
+  background: #ffffff;
+  border: 1px solid #d9e2ef;
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.metricCard {
+  padding: 18px;
+}
+
+.metricCard span {
+  display: block;
+  margin-bottom: 10px;
+  color: #667085;
+  font-size: 14px;
+}
+
+.metricCard strong {
+  display: block;
+  font-size: 26px;
+  line-height: 1.15;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: 16px;
+}
+
+.panel {
+  min-height: 360px;
+  padding: 20px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.panelHeader h3 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.panelHeader span {
+  color: #667085;
+  font-size: 13px;
+}
+
+.chartPlaceholder {
+  height: 270px;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #eef4ff 0%, #ffffff 100%);
+  border: 1px dashed #b7c6dc;
+}
+
+.barGroup {
+  flex: 1;
+  display: flex;
+  min-width: 52px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.bar {
+  width: 100%;
+  max-width: 72px;
+  min-height: 24px;
+  border-radius: 8px 8px 3px 3px;
+  background: #2563eb;
+}
+
+.productList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.productRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.productRow:last-child {
+  border-bottom: 0;
+}
+
+.productRow strong,
+.productRow span {
+  display: block;
+}
+
+.productRow span {
+  margin-top: 5px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.productValue {
+  text-align: right;
+}
+
+@media (max-width: 1100px) {
+  .metricsGrid,
+  .dashboardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .metricsGrid,
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .header h2 {
+    font-size: 25px;
+  }
+
+  .chartPlaceholder {
+    overflow-x: auto;
+  }
+}
