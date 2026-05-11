@@ -2,6 +2,8 @@
 
 Система интерактивной визуализации данных о товарах и заказах в e-commerce.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/StepanDrogin/ecommerce-data-visualization-system)
+
 ## Назначение проекта
 
 Проект разрабатывается в рамках магистерской ВКР на тему:

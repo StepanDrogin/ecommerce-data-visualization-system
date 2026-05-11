@@ -31,7 +31,7 @@ edvs-redis     Key Value    Redis-compatible cache
 ## Порядок деплоя
 
 1. Запушить репозиторий в GitHub.
-2. В Render открыть **New -> Blueprint**.
+2. В Render открыть **New -> Blueprint** или перейти по кнопке **Deploy to Render** из `README.md`.
 3. Выбрать репозиторий с проектом.
 4. Render обнаружит `render.yaml` и предложит создать сервисы.
 5. После создания проверить URL:
@@ -40,6 +40,8 @@ edvs-redis     Key Value    Redis-compatible cache
 https://edvs-frontend.onrender.com
 https://edvs-backend.onrender.com/health
 ```
+
+Прямая ссылка для запуска Blueprint: <https://render.com/deploy?repo=https://github.com/StepanDrogin/ecommerce-data-visualization-system>.
 
 В `render.yaml` используется `npm ci --include=dev`, потому что на этапе сборки и pre-deploy нужны TypeScript, Nest CLI, Prisma CLI и seed runner.
 
