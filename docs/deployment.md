@@ -15,7 +15,8 @@
 - `/health` endpoint на backend для health-check.
 - Backend слушает `process.env.PORT`, как ожидают PaaS-платформы.
 - CORS поддерживает `FRONTEND_URL`, `FRONTEND_URLS` и Render subdomains.
-- Prisma migrations и seed запускаются на этапе сборки backend-сервиса.
+- Prisma Client генерируется на этапе сборки backend-сервиса.
+- Prisma migrations и seed запускаются через Render `preDeployCommand`.
 - `.env.production.example` содержит production-переменные.
 
 ## Сервисы в Render Blueprint
@@ -40,7 +41,7 @@ https://edvs-frontend.onrender.com
 https://edvs-backend.onrender.com/health
 ```
 
-В `render.yaml` используется `npm ci --include=dev`, потому что на этапе сборки нужны TypeScript, Nest CLI, Prisma CLI и seed runner.
+В `render.yaml` используется `npm ci --include=dev`, потому что на этапе сборки и pre-deploy нужны TypeScript, Nest CLI, Prisma CLI и seed runner.
 
 Если Render изменит имена сервисов или subdomain, нужно обновить:
 

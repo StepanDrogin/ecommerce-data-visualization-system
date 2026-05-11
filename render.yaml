@@ -4,7 +4,8 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: npm ci --include=dev && npm run build -w @edvs/shared && npm run prisma:migrate -w @edvs/backend && npm run prisma:seed -w @edvs/backend && npm run build -w @edvs/backend
+    buildCommand: npm ci --include=dev && npm run build -w @edvs/shared && npm run prisma:generate -w @edvs/backend && npm run build -w @edvs/backend
+    preDeployCommand: npm run prisma:migrate -w @edvs/backend && npm run prisma:seed -w @edvs/backend
     startCommand: npm run start -w @edvs/backend
     healthCheckPath: /health
     envVars:
