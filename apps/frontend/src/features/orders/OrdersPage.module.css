@@ -15,6 +15,58 @@
   line-height: 1.55;
 }
 
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.search,
+.select {
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172033;
+  font-size: 15px;
+}
+
+.search {
+  width: min(420px, 100%);
+}
+
+.select {
+  min-width: 180px;
+}
+
+.clearButton {
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172033;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.clearButton:hover:not(:disabled) {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.clearButton:disabled {
+  color: #98a2b3;
+  cursor: not-allowed;
+}
+
+.resultCount {
+  color: #667085;
+  font-size: 14px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -22,7 +74,8 @@
 }
 
 .order,
-.state {
+.state,
+.emptyState {
   background: #ffffff;
   border: 1px solid #d9e2ef;
   border-radius: 8px;
@@ -99,6 +152,18 @@
 .state {
   padding: 18px;
   color: #667085;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px;
+  color: #667085;
+}
+
+.emptyState strong {
+  color: #172033;
 }
 
 .error {

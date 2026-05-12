@@ -2,7 +2,9 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, OrderStatus, PaymentMethod, ProductStatus } from "@prisma/client";
 
 const databaseUrl =
-  process.env.DATABASE_URL ?? "postgresql://ecommerce:ecommerce@localhost:5432/ecommerce_visualization?schema=public";
+  process.env.DIRECT_URL ??
+  process.env.DATABASE_URL ??
+  "postgresql://ecommerce:ecommerce@localhost:5432/ecommerce_visualization?schema=public";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: databaseUrl }),

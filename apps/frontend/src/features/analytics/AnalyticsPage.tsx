@@ -47,6 +47,10 @@ export function AnalyticsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasCustomFilters =
+    filters.dateFrom !== defaultFilters.dateFrom ||
+    filters.dateTo !== defaultFilters.dateTo ||
+    filters.categoryId !== defaultFilters.categoryId;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -133,6 +137,14 @@ export function AnalyticsPage() {
             ))}
           </select>
         </label>
+        <button
+          className={styles.resetButton}
+          type="button"
+          onClick={() => setFilters(defaultFilters)}
+          disabled={!hasCustomFilters}
+        >
+          Сбросить
+        </button>
       </form>
 
       {error ? (
@@ -172,7 +184,7 @@ export function AnalyticsPage() {
           <article className={styles.panelWide}>
             <div className={styles.panelHeader}>
               <h3>Товары по выручке</h3>
-              <span>top products</span>
+              <span>топ товаров</span>
             </div>
             <ProductsChart data={dashboard?.products ?? []} />
           </article>
@@ -228,6 +240,10 @@ function SalesChart({ data }: { data: SalesPoint[] }) {
     [data],
   );
 
+  if (data.length === 0) {
+    return <EmptyChartState />;
+  }
+
   return <Chart option={option} ariaLabel="График динамики продаж" />;
 }
 
@@ -249,6 +265,10 @@ function CategoryChart({ data }: { data: CategoryAnalyticsItem[] }) {
     [data],
   );
 
+  if (data.length === 0) {
+    return <EmptyChartState />;
+  }
+
   return <Chart option={option} ariaLabel="Диаграмма структуры категорий" />;
 }
 
@@ -269,6 +289,10 @@ function ProductsChart({ data }: { data: ProductAnalyticsItem[] }) {
     }),
     [data],
   );
+
+  if (data.length === 0) {
+    return <EmptyChartState />;
+  }
 
   return <Chart option={option} ariaLabel="Диаграмма товаров по выручке" />;
 }
@@ -294,6 +318,10 @@ function ProductList({ products }: { products: ProductAnalyticsItem[] }) {
       ))}
     </div>
   );
+}
+
+function EmptyChartState() {
+  return <div className={styles.chartEmptyState}>Нет данных для выбранных фильтров</div>;
 }
 
 function Chart({ option, ariaLabel }: { option: ChartOption; ariaLabel: string }) {

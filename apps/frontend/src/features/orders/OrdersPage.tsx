@@ -1,12 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Order } from "@edvs/shared";
 import { apiGet } from "../../api";
 import styles from "./OrdersPage.module.css";
 
 const formatter = new Intl.NumberFormat("ru-RU");
+type StatusFilter = "all" | Order["status"];
+
+const statusOptions: Array<{ value: StatusFilter; label: string }> = [
+  { value: "all", label: "Все статусы" },
+  { value: "created", label: "Создан" },
+  { value: "paid", label: "Оплачен" },
+  { value: "shipped", label: "Доставляется" },
+  { value: "completed", label: "Завершен" },
+  { value: "cancelled", label: "Отменен" },
+];
 
 export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +46,27 @@ export function OrdersPage() {
     return () => controller.abort();
   }, []);
 
+  const filteredOrders = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return orders.filter((order) => {
+      const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+      const searchableText = [
+        order.id,
+        order.customerName,
+        statusLabel(order.status),
+        paymentMethod(order.paymentMethod),
+        ...order.items.flatMap((item) => [item.productName, item.categoryName]),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return matchesStatus && (!normalizedQuery || searchableText.includes(normalizedQuery));
+    });
+  }, [orders, query, statusFilter]);
+
+  const hasFilters = query.trim().length > 0 || statusFilter !== "all";
+
   return (
     <section className={styles.section} id="orders">
       <header className={styles.header}>
@@ -41,12 +74,50 @@ export function OrdersPage() {
         <p>Карточки заказов показывают клиента, статус, состав заказа и итоговую сумму.</p>
       </header>
 
+      <div className={styles.toolbar}>
+        <input
+          className={styles.search}
+          type="search"
+          placeholder="Поиск по клиенту, товару или номеру заказа"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <select
+          className={styles.select}
+          aria-label="Статус заказа"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+        >
+          {statusOptions.map((option) => (
+            <option value={option.value} key={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <button
+          className={styles.clearButton}
+          type="button"
+          onClick={() => {
+            setQuery("");
+            setStatusFilter("all");
+          }}
+          disabled={!hasFilters}
+        >
+          Сбросить
+        </button>
+        {!isLoading && !error ? (
+          <span className={styles.resultCount}>
+            Показано {formatter.format(filteredOrders.length)} из {formatter.format(orders.length)}
+          </span>
+        ) : null}
+      </div>
+
       {error ? <div className={`${styles.state} ${styles.error}`}>{error}</div> : null}
       {isLoading ? <div className={styles.state}>Загрузка заказов...</div> : null}
 
-      {!isLoading && !error ? (
+      {!isLoading && !error && filteredOrders.length > 0 ? (
         <div className={styles.grid}>
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <article className={styles.order} key={order.id}>
               <div className={styles.top}>
                 <div>
@@ -78,6 +149,13 @@ export function OrdersPage() {
               </div>
             </article>
           ))}
+        </div>
+      ) : null}
+
+      {!isLoading && !error && filteredOrders.length === 0 ? (
+        <div className={styles.emptyState}>
+          <strong>Заказы не найдены</strong>
+          <span>Измените поиск, статус или сбросьте фильтры.</span>
         </div>
       ) : null}
     </section>

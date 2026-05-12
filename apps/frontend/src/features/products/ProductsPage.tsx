@@ -42,9 +42,13 @@ export function ProductsPage() {
     }
 
     return products.filter((product) =>
-      `${product.name} ${product.categoryName} ${product.status}`.toLowerCase().includes(normalizedQuery),
+      `${product.name} ${product.categoryName} ${product.status} ${productStatusLabel(product.status)}`
+        .toLowerCase()
+        .includes(normalizedQuery),
     );
   }, [products, query]);
+
+  const hasQuery = query.trim().length > 0;
 
   return (
     <section className={styles.section} id="products">
@@ -61,12 +65,20 @@ export function ProductsPage() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
+        <button className={styles.clearButton} type="button" onClick={() => setQuery("")} disabled={!hasQuery}>
+          Сбросить
+        </button>
+        {!isLoading && !error ? (
+          <span className={styles.resultCount}>
+            Показано {formatter.format(filteredProducts.length)} из {formatter.format(products.length)}
+          </span>
+        ) : null}
       </div>
 
       {error ? <div className={`${styles.state} ${styles.error}`}>{error}</div> : null}
       {isLoading ? <div className={styles.state}>Загрузка товаров...</div> : null}
 
-      {!isLoading && !error ? (
+      {!isLoading && !error && filteredProducts.length > 0 ? (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
@@ -97,18 +109,34 @@ export function ProductsPage() {
           </table>
         </div>
       ) : null}
+
+      {!isLoading && !error && filteredProducts.length === 0 ? (
+        <div className={styles.emptyState}>
+          <strong>Товары не найдены</strong>
+          <span>Измените поисковый запрос или сбросьте фильтр.</span>
+        </div>
+      ) : null}
     </section>
   );
 }
 
 function StatusBadge({ status }: { status: Product["status"] }) {
+  const label = productStatusLabel(status);
   if (status === "out_of_stock") {
-    return <span className={`${styles.badge} ${styles.badgeWarn}`}>Нет в наличии</span>;
+    return <span className={`${styles.badge} ${styles.badgeWarn}`}>{label}</span>;
   }
 
   if (status === "archived") {
-    return <span className={`${styles.badge} ${styles.badgeMuted}`}>Архив</span>;
+    return <span className={`${styles.badge} ${styles.badgeMuted}`}>{label}</span>;
   }
 
-  return <span className={styles.badge}>Доступен</span>;
+  return <span className={styles.badge}>{label}</span>;
+}
+
+function productStatusLabel(status: Product["status"]) {
+  return {
+    available: "Доступен",
+    out_of_stock: "Нет в наличии",
+    archived: "Архив",
+  }[status];
 }
