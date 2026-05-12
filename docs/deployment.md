@@ -1,6 +1,6 @@
 # Деплой проекта
 
-Документ описывает базовый сценарий публикации ВКР-приложения в интернете. Основной вариант без привязки карты - Vercel для frontend и serverless backend, а PostgreSQL подключается как внешний managed-сервис через `DATABASE_URL`. Для Supabase используется две строки подключения: pooled `DATABASE_URL` для runtime и direct `DIRECT_URL` для Prisma migrations/seed. Render Blueprint оставлен как альтернативный вариант, но managed PostgreSQL/Redis в Render может потребовать billing-профиль.
+Документ описывает базовый сценарий публикации ВКР-приложения в интернете. Основной вариант без привязки карты - Vercel для frontend и serverless backend, а PostgreSQL подключается как внешний managed-сервис через `DATABASE_URL`. Для Supabase используется две строки подключения: pooled `DATABASE_URL` для runtime и direct/session `DIRECT_URL` для Prisma migrations/seed. Render Blueprint оставлен как альтернативный вариант, но managed PostgreSQL/Redis в Render может потребовать billing-профиль.
 
 ## Вариант без карты: Vercel + внешний PostgreSQL
 
@@ -20,7 +20,7 @@
 
 ```text
 DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true
-DIRECT_URL=postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres
+DIRECT_URL=postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
 VITE_API_URL=/api
 FRONTEND_URL=https://your-project.vercel.app
 FRONTEND_URLS=https://your-project.vercel.app
@@ -31,14 +31,14 @@ NODE_ENV=production
 
 `REDIS_URL` можно не задавать на первом деплое.
 
-`DATABASE_URL` должен быть Supabase Transaction Pooler connection string с `?pgbouncer=true` на конце. Если в строке уже есть query-параметры, `pgbouncer=true` добавляется через `&`. `DIRECT_URL` должен быть direct connection string, потому что Prisma CLI выполняет migrations и seed через прямое подключение, а приложение в runtime использует pooled `DATABASE_URL`.
+`DATABASE_URL` должен быть Supabase Transaction Pooler connection string с `?pgbouncer=true` на конце. Если в строке уже есть query-параметры, `pgbouncer=true` добавляется через `&`. `DIRECT_URL` должен быть Direct connection string или Session Pooler connection string. Direct connection у Supabase может требовать IPv6, поэтому для Vercel и локальных IPv4-сетей надежнее брать Session Pooler на порту `5432`. Приложение в runtime использует pooled `DATABASE_URL`.
 
 ### Порядок деплоя на Vercel
 
 1. Создать бесплатную PostgreSQL-базу в Supabase.
 2. В Supabase открыть **Connect** и скопировать:
    - Transaction Pooler connection string в `DATABASE_URL`, добавив `?pgbouncer=true`;
-   - Direct connection string в `DIRECT_URL`.
+   - Session Pooler connection string в `DIRECT_URL`; если среда точно поддерживает IPv6, можно использовать Direct connection string.
 3. Добавить обе строки в Vercel Environment Variables для Production.
 4. В Vercel открыть **Add New -> Project**.
 5. Выбрать GitHub-репозиторий `StepanDrogin/ecommerce-data-visualization-system`.
