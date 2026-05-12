@@ -2,8 +2,8 @@ import { NestFactory } from "@nestjs/core";
 import { ExpressAdapter } from "@nestjs/platform-express";
 import express, { type Express } from "express";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { AppModule } from "../apps/backend/src/app.module";
-import { configureApp } from "../apps/backend/src/bootstrap";
+import { AppModule } from "../apps/backend/dist/app.module.js";
+import { configureApp } from "../apps/backend/dist/bootstrap.js";
 
 let cachedServer: Express | undefined;
 

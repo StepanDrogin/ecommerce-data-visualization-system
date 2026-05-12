@@ -10,7 +10,7 @@
   "scripts": {
     "build": "npm run build -w @edvs/shared && npm run build -w @edvs/backend && npm run build -w @edvs/frontend",
     "typecheck:vercel": "tsc -p tsconfig.vercel.json --noEmit",
-    "vercel:build": "npm run build -w @edvs/shared && npm run prisma:generate -w @edvs/backend && npm run typecheck:vercel && npm run prisma:migrate -w @edvs/backend && npm run prisma:seed -w @edvs/backend && npm run build -w @edvs/frontend",
+    "vercel:build": "npm run build -w @edvs/shared && npm run prisma:generate -w @edvs/backend && npm run build -w @edvs/backend && npm run typecheck:vercel && npm run prisma:migrate -w @edvs/backend && npm run prisma:seed -w @edvs/backend && npm run build -w @edvs/frontend",
     "dev:frontend": "npm run dev -w @edvs/frontend",
     "dev:backend": "npm run start:dev -w @edvs/backend",
     "start:backend": "npm run start -w @edvs/backend",
