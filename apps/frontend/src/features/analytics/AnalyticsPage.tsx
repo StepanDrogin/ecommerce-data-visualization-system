@@ -220,7 +220,7 @@ function SalesChart({ data }: { data: SalesPoint[] }) {
   const option = useMemo<ChartOption>(
     () => ({
       color: ["#2563eb", "#16a34a"],
-      grid: { top: 48, right: 30, bottom: 42, left: 64 },
+      grid: { top: 48, right: 30, bottom: 68, left: 64 },
       tooltip: { trigger: "axis" },
       legend: { bottom: 0, textStyle: { color: "#475467" } },
       xAxis: {
