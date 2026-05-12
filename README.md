@@ -6,6 +6,34 @@
 
 > Основной бесплатный вариант публикации без привязки карты: Vercel + внешний PostgreSQL. Render Blueprint оставлен как альтернативный вариант, но managed PostgreSQL/Redis в Render может потребовать billing-профиль.
 
+## Демо
+
+Production-демо доступно на Vercel:
+
+<https://ecommerce-data-visualization-system-six.vercel.app>
+
+Проверочные API endpoints:
+
+```text
+https://ecommerce-data-visualization-system-six.vercel.app/api/health
+https://ecommerce-data-visualization-system-six.vercel.app/api/products
+https://ecommerce-data-visualization-system-six.vercel.app/api/analytics/dashboard?dateFrom=2026-05-01&dateTo=2026-05-11
+```
+
+## Скриншоты
+
+### Аналитика
+
+![Экран аналитики](docs/screenshots/analytics-dashboard.png)
+
+### Товары
+
+![Экран каталога товаров](docs/screenshots/products-catalog.png)
+
+### Заказы
+
+![Экран заказов с фильтром по отмененным заказам](docs/screenshots/orders-filtered.png)
+
 ## Назначение проекта
 
 Проект разрабатывается в рамках магистерской ВКР на тему:
