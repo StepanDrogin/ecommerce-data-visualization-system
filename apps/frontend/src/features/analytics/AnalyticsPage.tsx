@@ -220,7 +220,7 @@ function SalesChart({ data }: { data: SalesPoint[] }) {
   const option = useMemo<ChartOption>(
     () => ({
       color: ["#2563eb", "#16a34a"],
-      grid: { top: 24, right: 16, bottom: 32, left: 58 },
+      grid: { top: 48, right: 30, bottom: 42, left: 64 },
       tooltip: { trigger: "axis" },
       legend: { bottom: 0, textStyle: { color: "#475467" } },
       xAxis: {
@@ -229,8 +229,14 @@ function SalesChart({ data }: { data: SalesPoint[] }) {
         axisLine: { lineStyle: { color: "#cbd5e1" } },
       },
       yAxis: [
-        { type: "value", name: "₽", axisLine: { show: false }, splitLine: { lineStyle: { color: "#e5edf7" } } },
-        { type: "value", name: "шт.", axisLine: { show: false }, splitLine: { show: false } },
+        {
+          type: "value",
+          name: "₽",
+          nameGap: 18,
+          axisLine: { show: false },
+          splitLine: { lineStyle: { color: "#e5edf7" } },
+        },
+        { type: "value", name: "шт.", nameGap: 18, axisLine: { show: false }, splitLine: { show: false } },
       ],
       series: [
         { name: "Выручка", type: "bar", data: data.map((point) => point.revenue), barMaxWidth: 34 },
@@ -256,8 +262,11 @@ function CategoryChart({ data }: { data: CategoryAnalyticsItem[] }) {
         {
           name: "Категории",
           type: "pie",
-          radius: ["48%", "72%"],
+          radius: ["45%", "67%"],
+          center: ["50%", "56%"],
           avoidLabelOverlap: true,
+          label: { padding: [0, 0, 0, 4] },
+          labelLine: { length: 18, length2: 18 },
           data: data.map((item) => ({ value: item.revenue, name: item.categoryName })),
         },
       ],
@@ -276,7 +285,7 @@ function ProductsChart({ data }: { data: ProductAnalyticsItem[] }) {
   const option = useMemo<ChartOption>(
     () => ({
       color: ["#2563eb"],
-      grid: { top: 20, right: 18, bottom: 62, left: 78 },
+      grid: { top: 44, right: 24, bottom: 72, left: 82 },
       tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
       xAxis: {
         type: "category",
