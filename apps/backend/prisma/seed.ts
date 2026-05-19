@@ -28,16 +28,16 @@ const users = [
 ];
 
 const products = [
-  { id: "p-1", name: "Smart Watch S2", categoryId: "electronics", price: 12990, stock: 42, status: ProductStatus.AVAILABLE },
-  { id: "p-2", name: "Coffee Machine Pro", categoryId: "home", price: 21990, stock: 18, status: ProductStatus.AVAILABLE },
-  { id: "p-3", name: "Wireless Headphones", categoryId: "electronics", price: 7990, stock: 64, status: ProductStatus.AVAILABLE },
-  { id: "p-4", name: "Running Jacket", categoryId: "sport", price: 6490, stock: 31, status: ProductStatus.AVAILABLE },
-  { id: "p-5", name: "Classic Hoodie", categoryId: "fashion", price: 3990, stock: 0, status: ProductStatus.OUT_OF_STOCK },
-  { id: "p-6", name: "Air Fryer Compact", categoryId: "home", price: 11490, stock: 27, status: ProductStatus.AVAILABLE },
-  { id: "p-7", name: "Yoga Mat Soft", categoryId: "sport", price: 2490, stock: 73, status: ProductStatus.AVAILABLE },
-  { id: "p-8", name: "Skin Care Set", categoryId: "beauty", price: 5490, stock: 36, status: ProductStatus.AVAILABLE },
-  { id: "p-9", name: "Laptop Stand", categoryId: "electronics", price: 4590, stock: 55, status: ProductStatus.AVAILABLE },
-  { id: "p-10", name: "Oversize T-Shirt", categoryId: "fashion", price: 1990, stock: 80, status: ProductStatus.AVAILABLE },
+  { id: "p-1", name: "Умные часы S2", categoryId: "electronics", price: 12990, stock: 42, status: ProductStatus.AVAILABLE },
+  { id: "p-2", name: "Кофемашина Про", categoryId: "home", price: 21990, stock: 18, status: ProductStatus.AVAILABLE },
+  { id: "p-3", name: "Беспроводные наушники", categoryId: "electronics", price: 7990, stock: 64, status: ProductStatus.AVAILABLE },
+  { id: "p-4", name: "Беговая куртка", categoryId: "sport", price: 6490, stock: 31, status: ProductStatus.AVAILABLE },
+  { id: "p-5", name: "Базовая толстовка", categoryId: "fashion", price: 3990, stock: 0, status: ProductStatus.OUT_OF_STOCK },
+  { id: "p-6", name: "Компактный аэрогриль", categoryId: "home", price: 11490, stock: 27, status: ProductStatus.AVAILABLE },
+  { id: "p-7", name: "Коврик для йоги", categoryId: "sport", price: 2490, stock: 73, status: ProductStatus.AVAILABLE },
+  { id: "p-8", name: "Набор ухода за кожей", categoryId: "beauty", price: 5490, stock: 36, status: ProductStatus.AVAILABLE },
+  { id: "p-9", name: "Подставка для ноутбука", categoryId: "electronics", price: 4590, stock: 55, status: ProductStatus.AVAILABLE },
+  { id: "p-10", name: "Свободная футболка", categoryId: "fashion", price: 1990, stock: 80, status: ProductStatus.AVAILABLE },
 ];
 
 const orderSpecs = [
@@ -52,6 +52,11 @@ const orderSpecs = [
   { id: "o-9", userId: "u-6", status: OrderStatus.COMPLETED, paymentMethod: PaymentMethod.CARD, createdAt: "2026-05-09T18:40:00.000Z", items: [["p-8", 2], ["p-10", 3]] },
   { id: "o-10", userId: "u-4", status: OrderStatus.COMPLETED, paymentMethod: PaymentMethod.BANK_TRANSFER, createdAt: "2026-05-10T12:05:00.000Z", items: [["p-9", 2], ["p-3", 1]] },
   { id: "o-11", userId: "u-2", status: OrderStatus.PAID, paymentMethod: PaymentMethod.CARD, createdAt: "2026-05-11T09:15:00.000Z", items: [["p-4", 1], ["p-7", 1]] },
+  { id: "o-12", userId: "u-5", status: OrderStatus.COMPLETED, paymentMethod: PaymentMethod.CARD, createdAt: "2026-05-01T17:25:00.000Z", items: [["p-8", 1], ["p-10", 2]] },
+  { id: "o-13", userId: "u-6", status: OrderStatus.COMPLETED, paymentMethod: PaymentMethod.CARD, createdAt: "2026-05-04T19:10:00.000Z", items: [["p-6", 1]] },
+  { id: "o-14", userId: "u-5", status: OrderStatus.SHIPPED, paymentMethod: PaymentMethod.BANK_TRANSFER, createdAt: "2026-05-07T11:45:00.000Z", items: [["p-7", 2], ["p-8", 1]] },
+  { id: "o-15", userId: "u-1", status: OrderStatus.COMPLETED, paymentMethod: PaymentMethod.CARD, createdAt: "2026-05-09T20:05:00.000Z", items: [["p-1", 1]] },
+  { id: "o-16", userId: "u-6", status: OrderStatus.PAID, paymentMethod: PaymentMethod.CARD, createdAt: "2026-05-10T15:35:00.000Z", items: [["p-10", 3]] },
 ] as const;
 
 async function main() {

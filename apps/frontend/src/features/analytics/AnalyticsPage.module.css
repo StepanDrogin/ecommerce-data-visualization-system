@@ -320,19 +320,23 @@
   height: 34px;
   display: grid;
   place-items: center;
+  align-self: center;
+  justify-self: center;
   border-radius: 7px;
   color: #0f766e;
   background: #ccfbf1;
   font-size: 12px;
   font-weight: 900;
+  line-height: 1;
+  text-align: center;
 }
 
 .productRow strong,
-.productRow span {
+.productRow div span {
   display: block;
 }
 
-.productRow span {
+.productRow div span {
   margin-top: 4px;
   color: #667085;
   font-size: 13px;
@@ -443,9 +447,17 @@
     height: 320px;
   }
 
+  .panelWide .chart {
+    height: 430px;
+  }
+
   .panelHeader {
     flex-direction: column;
     gap: 6px;
+  }
+
+  .panelHeader small {
+    white-space: normal;
   }
 
   .productRow {

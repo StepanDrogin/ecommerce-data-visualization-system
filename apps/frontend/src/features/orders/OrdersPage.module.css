@@ -125,10 +125,16 @@
   align-items: center;
   gap: 4px;
   overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   padding: 4px;
   border: 1px solid rgba(148, 163, 184, 0.26);
   border-radius: 8px;
   background: #f8fafc;
+}
+
+.segmented::-webkit-scrollbar {
+  display: none;
 }
 
 .segment,
@@ -379,10 +385,17 @@
 @media (max-width: 1180px) {
   .toolbar {
     grid-template-columns: 1fr;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   .segmented {
     width: 100%;
+  }
+
+  .toolbar::-webkit-scrollbar {
+    display: none;
   }
 }
 

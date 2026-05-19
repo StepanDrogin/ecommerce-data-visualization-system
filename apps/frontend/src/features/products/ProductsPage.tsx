@@ -64,12 +64,12 @@ export function ProductsPage() {
     <section className={styles.section} id="products">
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}>Inventory map</span>
+          <span className={styles.eyebrow}>Карта ассортимента</span>
           <h2>Товарный каталог</h2>
-          <p>Витрина товаров из PostgreSQL: категории, остатки, цены и статус доступности в одном рабочем срезе.</p>
+          <p>Витрина товаров из базы данных: категории, остатки, цены и статус доступности в одном рабочем срезе.</p>
         </div>
         <div className={styles.headerBadge}>
-          <span>SKU</span>
+          <span>Товаров</span>
           <strong>{formatter.format(stats.total)}</strong>
         </div>
       </header>

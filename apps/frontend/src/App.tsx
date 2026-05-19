@@ -7,9 +7,9 @@ import { ProductsPage } from "./features/products/ProductsPage";
 type View = "analytics" | "products" | "orders";
 
 const views: Array<{ id: View; label: string; shortLabel: string; description: string }> = [
-  { id: "analytics", label: "Аналитика", shortLabel: "AN", description: "Выручка, категории, топы" },
-  { id: "products", label: "Товары", shortLabel: "PR", description: "Каталог и остатки" },
-  { id: "orders", label: "Заказы", shortLabel: "OR", description: "Статусы и состав" },
+  { id: "analytics", label: "Аналитика", shortLabel: "А", description: "Выручка, категории, топы" },
+  { id: "products", label: "Товары", shortLabel: "Т", description: "Каталог и остатки" },
+  { id: "orders", label: "Заказы", shortLabel: "З", description: "Статусы и состав" },
 ];
 
 export function App() {
@@ -20,10 +20,10 @@ export function App() {
     <div className={styles.appShell}>
       <aside className={styles.rail} aria-label="Навигация приложения">
         <div className={styles.brand}>
-          <span className={styles.brandMark}>ED</span>
+          <span className={styles.brandMark}>ЭД</span>
           <div>
-            <span className={styles.projectLabel}>ВКР Dashboard</span>
-            <strong>E-commerce</strong>
+            <span className={styles.projectLabel}>ВКР</span>
+            <strong>Аналитика магазина</strong>
           </div>
         </div>
 
@@ -47,7 +47,7 @@ export function App() {
 
         <div className={styles.railFooter}>
           <span className={styles.liveDot} />
-          <span>Production data</span>
+          <span>Данные обновлены</span>
         </div>
       </aside>
 

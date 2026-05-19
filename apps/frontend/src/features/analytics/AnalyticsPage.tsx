@@ -101,11 +101,9 @@ export function AnalyticsPage() {
     <section className={styles.page} id="analytics">
       <header className={styles.hero}>
         <div className={styles.heroCopy}>
-          <span className={styles.eyebrow}>Revenue intelligence</span>
+          <span className={styles.eyebrow}>Аналитика выручки</span>
           <h2>Аналитика продаж</h2>
-          <p>
-            Видно, где растет выручка, какие категории держат оборот и какие товары стоит подсветить в витрине.
-          </p>
+          <p>Видно, где растет выручка, какие категории держат оборот и какие товары стоит подсветить в витрине.</p>
         </div>
         <div className={styles.heroSignal} aria-label="Текущий срез данных">
           <span>Срез</span>
@@ -193,7 +191,7 @@ export function AnalyticsPage() {
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
               <div>
-                <span>time series</span>
+                <span>Динамика</span>
                 <h3>Динамика продаж</h3>
               </div>
               <small>выручка и заказы</small>
@@ -204,7 +202,7 @@ export function AnalyticsPage() {
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
               <div>
-                <span>mix</span>
+                <span>Категории</span>
                 <h3>Структура категорий</h3>
               </div>
               <small>доля выручки</small>
@@ -215,7 +213,7 @@ export function AnalyticsPage() {
           <article className={styles.panelWide}>
             <div className={styles.panelHeader}>
               <div>
-                <span>ranking</span>
+                <span>Рейтинг</span>
                 <h3>Товары по выручке</h3>
               </div>
               <small>топ товаров</small>
@@ -226,7 +224,7 @@ export function AnalyticsPage() {
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
               <div>
-                <span>details</span>
+                <span>Детали</span>
                 <h3>Детализация товаров</h3>
               </div>
               <small>выручка и штуки</small>
@@ -284,6 +282,7 @@ function SalesChart({ data }: { data: SalesPoint[] }) {
           type: "value",
           name: "шт.",
           nameGap: 24,
+          minInterval: 1,
           nameTextStyle: { color: "#667085", padding: [0, 0, 8, 0] },
           axisLine: { show: false },
           axisLabel: { color: "#667085" },
@@ -350,35 +349,69 @@ function CategoryChart({ data }: { data: CategoryAnalyticsItem[] }) {
 }
 
 function ProductsChart({ data }: { data: ProductAnalyticsItem[] }) {
+  const isCompact = useIsCompactViewport();
   const option = useMemo<ChartOption>(
-    () => ({
-      color: ["#2563eb"],
-      grid: { top: 42, right: 24, bottom: 82, left: 82 },
-      tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, backgroundColor: "#101828", borderWidth: 0, textStyle: { color: "#ffffff" } },
-      xAxis: {
-        type: "category",
-        data: data.map((item) => item.productName),
-        axisLabel: { rotate: 24, interval: 0, color: "#667085" },
-        axisTick: { show: false },
-        axisLine: { lineStyle: { color: "#cbd5e1" } },
-      },
-      yAxis: {
-        type: "value",
-        axisLine: { show: false },
-        axisLabel: { color: "#667085" },
-        splitLine: { lineStyle: { color: "rgba(148, 163, 184, 0.22)" } },
-      },
-      series: [
-        {
-          name: "Выручка",
-          type: "bar",
-          data: data.map((item) => item.revenue),
-          barMaxWidth: 42,
-          itemStyle: { borderRadius: [6, 6, 0, 0] },
+    () => {
+      if (isCompact) {
+        return {
+          color: ["#2563eb"],
+          grid: { top: 20, right: 24, bottom: 24, left: 126 },
+          tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, backgroundColor: "#101828", borderWidth: 0, textStyle: { color: "#ffffff" } },
+          xAxis: {
+            type: "value",
+            axisLine: { show: false },
+            axisLabel: { color: "#667085" },
+            splitLine: { lineStyle: { color: "rgba(148, 163, 184, 0.22)" } },
+          },
+          yAxis: {
+            type: "category",
+            data: data.map((item) => item.productName),
+            inverse: true,
+            axisTick: { show: false },
+            axisLine: { show: false },
+            axisLabel: { color: "#667085", width: 112, overflow: "truncate" },
+          },
+          series: [
+            {
+              name: "Выручка",
+              type: "bar",
+              data: data.map((item) => item.revenue),
+              barMaxWidth: 18,
+              itemStyle: { borderRadius: [0, 6, 6, 0] },
+            },
+          ],
+        };
+      }
+
+      return {
+        color: ["#2563eb"],
+        grid: { top: 42, right: 24, bottom: 82, left: 82 },
+        tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, backgroundColor: "#101828", borderWidth: 0, textStyle: { color: "#ffffff" } },
+        xAxis: {
+          type: "category",
+          data: data.map((item) => item.productName),
+          axisLabel: { rotate: 24, interval: 0, color: "#667085" },
+          axisTick: { show: false },
+          axisLine: { lineStyle: { color: "#cbd5e1" } },
         },
-      ],
-    }),
-    [data],
+        yAxis: {
+          type: "value",
+          axisLine: { show: false },
+          axisLabel: { color: "#667085" },
+          splitLine: { lineStyle: { color: "rgba(148, 163, 184, 0.22)" } },
+        },
+        series: [
+          {
+            name: "Выручка",
+            type: "bar",
+            data: data.map((item) => item.revenue),
+            barMaxWidth: 42,
+            itemStyle: { borderRadius: [6, 6, 0, 0] },
+          },
+        ],
+      };
+    },
+    [data, isCompact],
   );
 
   if (data.length === 0) {
@@ -439,7 +472,7 @@ function Chart({ option, ariaLabel }: { option: ChartOption; ariaLabel: string }
     }
 
     const chart = echarts.init(containerRef.current);
-    chart.setOption(option);
+    chart.setOption(option, true);
 
     const resizeObserver = new ResizeObserver(() => chart.resize());
     resizeObserver.observe(containerRef.current);
@@ -451,6 +484,26 @@ function Chart({ option, ariaLabel }: { option: ChartOption; ariaLabel: string }
   }, [option]);
 
   return <div className={styles.chart} ref={containerRef} role="img" aria-label={ariaLabel} />;
+}
+
+function useIsCompactViewport() {
+  const [isCompact, setIsCompact] = useState(() =>
+    typeof window === "undefined" ? false : window.matchMedia("(max-width: 760px)").matches,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(max-width: 760px)");
+    const update = () => setIsCompact(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener("change", update);
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
+
+  return isCompact;
 }
 
 function formatMoney(value: number) {

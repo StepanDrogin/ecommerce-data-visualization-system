@@ -220,6 +220,12 @@
     flex-direction: row;
     overflow-x: auto;
     padding-bottom: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
   }
 
   .navItem,

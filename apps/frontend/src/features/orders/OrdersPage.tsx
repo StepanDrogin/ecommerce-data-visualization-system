@@ -85,7 +85,7 @@ export function OrdersPage() {
     <section className={styles.section} id="orders">
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}>Fulfillment stream</span>
+          <span className={styles.eyebrow}>Поток заказов</span>
           <h2>Заказы</h2>
           <p>Карточки заказов показывают клиента, статус, состав корзины и итоговую сумму без лишнего перехода в детали.</p>
         </div>
@@ -173,7 +173,7 @@ export function OrdersPage() {
                       <span className={styles.muted}>{item.categoryName}</span>
                     </div>
                     <span>
-                      {item.quantity} x {formatMoney(item.price)}
+                      {item.quantity} шт. по {formatMoney(item.price)}
                     </span>
                   </div>
                 ))}

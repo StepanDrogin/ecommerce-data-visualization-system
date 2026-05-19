@@ -365,6 +365,13 @@
     flex-direction: column;
   }
 
+  .toolbar {
+    max-height: 178px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(15, 118, 110, 0.42) transparent;
+  }
+
   .statsGrid,
   .catalog,
   .loadingGrid {
