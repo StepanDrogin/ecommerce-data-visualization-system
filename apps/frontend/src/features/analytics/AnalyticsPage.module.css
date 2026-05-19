@@ -181,36 +181,20 @@
   background: var(--metric-color);
 }
 
-.metricCard::after {
-  content: "";
-  position: absolute;
-  right: -32px;
-  bottom: -38px;
-  width: 128px;
-  height: 128px;
-  border: 18px solid var(--metric-soft);
-  border-radius: 50%;
-  z-index: -1;
-}
-
 .metricblue {
   --metric-color: #2563eb;
-  --metric-soft: rgba(37, 99, 235, 0.12);
 }
 
 .metricgreen {
   --metric-color: #0f766e;
-  --metric-soft: rgba(15, 118, 110, 0.13);
 }
 
 .metricamber {
   --metric-color: #f59e0b;
-  --metric-soft: rgba(245, 158, 11, 0.16);
 }
 
 .metricpink {
   --metric-color: #db2777;
-  --metric-soft: rgba(219, 39, 119, 0.12);
 }
 
 .metricCard span,

@@ -57,11 +57,6 @@ export function App() {
             <span className={styles.contextLabel}>Операционный центр</span>
             <h1>{activeMeta.label}</h1>
           </div>
-          <div className={styles.topbarMeta} aria-label="Состояние витрины">
-            <span>Supabase</span>
-            <span>Vercel</span>
-            <strong>Live</strong>
-          </div>
         </header>
 
         <main className={styles.content}>
