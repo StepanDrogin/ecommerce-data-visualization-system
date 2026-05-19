@@ -7,7 +7,7 @@ const formatter = new Intl.NumberFormat("ru-RU");
 type StatusFilter = "all" | Order["status"];
 
 const statusOptions: Array<{ value: StatusFilter; label: string }> = [
-  { value: "all", label: "Все статусы" },
+  { value: "all", label: "Все" },
   { value: "created", label: "Создан" },
   { value: "paid", label: "Оплачен" },
   { value: "shipped", label: "Доставляется" },
@@ -65,35 +65,66 @@ export function OrdersPage() {
     });
   }, [orders, query, statusFilter]);
 
+  const statusCounts = useMemo(() => {
+    const counts = new Map<StatusFilter, number>([["all", orders.length]]);
+    for (const option of statusOptions) {
+      if (option.value !== "all") {
+        counts.set(option.value, orders.filter((order) => order.status === option.value).length);
+      }
+    }
+    return counts;
+  }, [orders]);
+
+  const revenue = useMemo(
+    () => orders.filter((order) => order.status !== "cancelled").reduce((sum, order) => sum + order.totalAmount, 0),
+    [orders],
+  );
   const hasFilters = query.trim().length > 0 || statusFilter !== "all";
 
   return (
     <section className={styles.section} id="orders">
       <header className={styles.header}>
-        <h2>Заказы</h2>
-        <p>Карточки заказов показывают клиента, статус, состав заказа и итоговую сумму.</p>
+        <div>
+          <span className={styles.eyebrow}>Fulfillment stream</span>
+          <h2>Заказы</h2>
+          <p>Карточки заказов показывают клиента, статус, состав корзины и итоговую сумму без лишнего перехода в детали.</p>
+        </div>
+        <div className={styles.headerMetrics}>
+          <div>
+            <span>Оборот</span>
+            <strong>{formatMoney(revenue)}</strong>
+          </div>
+          <div>
+            <span>Заказы</span>
+            <strong>{formatter.format(orders.length)}</strong>
+          </div>
+        </div>
       </header>
 
       <div className={styles.toolbar}>
-        <input
-          className={styles.search}
-          type="search"
-          placeholder="Поиск по клиенту, товару или номеру заказа"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <select
-          className={styles.select}
-          aria-label="Статус заказа"
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-        >
+        <label className={styles.searchBox}>
+          <span>Поиск</span>
+          <input
+            className={styles.search}
+            type="search"
+            placeholder="Клиент, товар или номер заказа"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
+        <div className={styles.segmented} aria-label="Статус заказа">
           {statusOptions.map((option) => (
-            <option value={option.value} key={option.value}>
+            <button
+              className={statusFilter === option.value ? styles.segmentActive : styles.segment}
+              type="button"
+              key={option.value}
+              onClick={() => setStatusFilter(option.value)}
+            >
               {option.label}
-            </option>
+              <span>{formatter.format(statusCounts.get(option.value) ?? 0)}</span>
+            </button>
           ))}
-        </select>
+        </div>
         <button
           className={styles.clearButton}
           type="button"
@@ -113,24 +144,24 @@ export function OrdersPage() {
       </div>
 
       {error ? <div className={`${styles.state} ${styles.error}`}>{error}</div> : null}
-      {isLoading ? <div className={styles.state}>Загрузка заказов...</div> : null}
+      {isLoading ? <LoadingOrders /> : null}
 
       {!isLoading && !error && filteredOrders.length > 0 ? (
         <div className={styles.grid}>
           {filteredOrders.map((order) => (
             <article className={styles.order} key={order.id}>
+              <div className={styles.orderRail} aria-hidden="true" />
               <div className={styles.top}>
                 <div>
+                  <span className={styles.orderId}>{order.id}</span>
                   <strong>{order.customerName}</strong>
                   <span className={styles.muted}>
-                    {order.id} · {order.createdAt.slice(0, 10)} · {paymentMethod(order.paymentMethod)}
+                    {order.createdAt.slice(0, 10)} / {paymentMethod(order.paymentMethod)}
                   </span>
                 </div>
                 <div className={styles.amount}>
-                  <strong>{formatter.format(order.totalAmount)} ₽</strong>
-                  <span className={styles.muted}>
-                    <StatusBadge status={order.status} />
-                  </span>
+                  <strong>{formatMoney(order.totalAmount)}</strong>
+                  <StatusBadge status={order.status} />
                 </div>
               </div>
 
@@ -142,7 +173,7 @@ export function OrdersPage() {
                       <span className={styles.muted}>{item.categoryName}</span>
                     </div>
                     <span>
-                      {item.quantity} × {formatter.format(item.price)} ₽
+                      {item.quantity} x {formatMoney(item.price)}
                     </span>
                   </div>
                 ))}
@@ -171,7 +202,25 @@ function StatusBadge({ status }: { status: Order["status"] }) {
     return <span className={`${styles.badge} ${styles.badgeCancel}`}>Отменен</span>;
   }
 
+  if (status === "paid") {
+    return <span className={`${styles.badge} ${styles.badgePaid}`}>Оплачен</span>;
+  }
+
   return <span className={styles.badge}>{statusLabel(status)}</span>;
+}
+
+function LoadingOrders() {
+  return (
+    <div className={styles.loadingGrid} aria-label="Загрузка заказов">
+      {Array.from({ length: 4 }, (_, index) => (
+        <div className={styles.skeletonOrder} key={index}>
+          <span />
+          <strong />
+          <i />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function statusLabel(status: Order["status"]) {
@@ -190,4 +239,8 @@ function paymentMethod(method: Order["paymentMethod"]) {
     cash: "наличные",
     bank_transfer: "перевод",
   }[method];
+}
+
+function formatMoney(value: number) {
+  return `${formatter.format(value)} ₽`;
 }

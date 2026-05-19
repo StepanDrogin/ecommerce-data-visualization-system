@@ -40,6 +40,7 @@ const defaultFilters: Required<Pick<AnalyticsFilters, "dateFrom" | "dateTo">> & 
 };
 
 const formatter = new Intl.NumberFormat("ru-RU");
+const moneyFormatter = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
 
 export function AnalyticsPage() {
   const [filters, setFilters] = useState(defaultFilters);
@@ -93,16 +94,25 @@ export function AnalyticsPage() {
   }, [filters]);
 
   const summary = dashboard?.summary;
+  const leadingProduct = dashboard?.products[0];
+  const selectedCategory = categories.find((category) => category.id === filters.categoryId)?.name ?? "Все категории";
 
   return (
     <section className={styles.page} id="analytics">
-      <header className={styles.header}>
-        <div>
-          <h2>Интерактивная аналитика товаров и заказов</h2>
+      <header className={styles.hero}>
+        <div className={styles.heroCopy}>
+          <span className={styles.eyebrow}>Revenue intelligence</span>
+          <h2>Аналитика продаж</h2>
           <p>
-            Дашборд показывает ключевые показатели e-commerce: динамику продаж, структуру категорий,
-            топ товаров, средний чек и долю завершенных заказов.
+            Видно, где растет выручка, какие категории держат оборот и какие товары стоит подсветить в витрине.
           </p>
+        </div>
+        <div className={styles.heroSignal} aria-label="Текущий срез данных">
+          <span>Срез</span>
+          <strong>{selectedCategory}</strong>
+          <small>
+            {formatDate(filters.dateFrom)} - {formatDate(filters.dateTo)}
+          </small>
         </div>
       </header>
 
@@ -155,44 +165,71 @@ export function AnalyticsPage() {
       ) : null}
 
       <div className={styles.metricsGrid} aria-busy={isLoading}>
-        <MetricCard label="Выручка" value={summary ? `${formatter.format(summary.totalRevenue)} ₽` : "-"} />
-        <MetricCard label="Заказы" value={summary ? formatter.format(summary.totalOrders) : "-"} />
-        <MetricCard label="Средний чек" value={summary ? `${formatter.format(summary.averageOrderValue)} ₽` : "-"} />
-        <MetricCard label="Завершение" value={summary ? `${summary.conversionRevenueShare}%` : "-"} />
+        <MetricCard tone="blue" label="Выручка" value={summary ? formatMoney(summary.totalRevenue) : "-"} caption="без отмененных заказов" />
+        <MetricCard tone="green" label="Заказы" value={summary ? formatter.format(summary.totalOrders) : "-"} caption="в выбранном периоде" />
+        <MetricCard tone="amber" label="Средний чек" value={summary ? formatMoney(summary.averageOrderValue) : "-"} caption="среднее по заказам" />
+        <MetricCard tone="pink" label="Завершение" value={summary ? `${summary.conversionRevenueShare}%` : "-"} caption="доля успешной выручки" />
+      </div>
+
+      <div className={styles.insightStrip}>
+        <div>
+          <span>Лидер витрины</span>
+          <strong>{leadingProduct?.productName ?? "Нет данных"}</strong>
+        </div>
+        <div>
+          <span>Продано единиц</span>
+          <strong>{leadingProduct ? formatter.format(leadingProduct.unitsSold) : "-"}</strong>
+        </div>
+        <div>
+          <span>Статус</span>
+          <strong>{isLoading ? "Обновляем" : "Готово к демо"}</strong>
+        </div>
       </div>
 
       {isLoading ? (
-        <div className={styles.loadingState}>Загрузка аналитики...</div>
+        <LoadingDashboard />
       ) : (
         <div className={styles.dashboardGrid}>
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
-              <h3>Динамика продаж</h3>
-              <span>выручка и заказы</span>
+              <div>
+                <span>time series</span>
+                <h3>Динамика продаж</h3>
+              </div>
+              <small>выручка и заказы</small>
             </div>
             <SalesChart data={dashboard?.sales ?? []} />
           </article>
 
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
-              <h3>Структура категорий</h3>
-              <span>доля выручки</span>
+              <div>
+                <span>mix</span>
+                <h3>Структура категорий</h3>
+              </div>
+              <small>доля выручки</small>
             </div>
             <CategoryChart data={dashboard?.categories ?? []} />
           </article>
 
           <article className={styles.panelWide}>
             <div className={styles.panelHeader}>
-              <h3>Товары по выручке</h3>
-              <span>топ товаров</span>
+              <div>
+                <span>ranking</span>
+                <h3>Товары по выручке</h3>
+              </div>
+              <small>топ товаров</small>
             </div>
             <ProductsChart data={dashboard?.products ?? []} />
           </article>
 
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
-              <h3>Детализация товаров</h3>
-              <span>выручка и штуки</span>
+              <div>
+                <span>details</span>
+                <h3>Детализация товаров</h3>
+              </div>
+              <small>выручка и штуки</small>
             </div>
             <ProductList products={dashboard?.products ?? []} />
           </article>
@@ -205,13 +242,16 @@ export function AnalyticsPage() {
 type MetricCardProps = {
   label: string;
   value: string;
+  caption: string;
+  tone: "blue" | "green" | "amber" | "pink";
 };
 
-function MetricCard({ label, value }: MetricCardProps) {
+function MetricCard({ label, value, caption, tone }: MetricCardProps) {
   return (
-    <article className={styles.metricCard}>
+    <article className={`${styles.metricCard} ${styles[`metric${tone}`]}`}>
       <span>{label}</span>
       <strong>{value}</strong>
+      <small>{caption}</small>
     </article>
   );
 }
@@ -219,28 +259,54 @@ function MetricCard({ label, value }: MetricCardProps) {
 function SalesChart({ data }: { data: SalesPoint[] }) {
   const option = useMemo<ChartOption>(
     () => ({
-      color: ["#2563eb", "#16a34a"],
-      grid: { top: 48, right: 30, bottom: 68, left: 64 },
-      tooltip: { trigger: "axis" },
-      legend: { bottom: 0, textStyle: { color: "#475467" } },
+      color: ["#2563eb", "#0f766e"],
+      grid: { top: 60, right: 42, bottom: 70, left: 70 },
+      tooltip: { trigger: "axis", backgroundColor: "#101828", borderWidth: 0, textStyle: { color: "#ffffff" } },
+      legend: { bottom: 0, icon: "roundRect", itemGap: 18, textStyle: { color: "#667085" } },
       xAxis: {
         type: "category",
         data: data.map((point) => point.date.slice(5)),
+        axisTick: { show: false },
         axisLine: { lineStyle: { color: "#cbd5e1" } },
+        axisLabel: { color: "#667085" },
       },
       yAxis: [
         {
           type: "value",
-          name: "₽",
-          nameGap: 18,
+          name: "руб.",
+          nameGap: 24,
+          nameTextStyle: { color: "#667085", padding: [0, 0, 8, 0] },
           axisLine: { show: false },
-          splitLine: { lineStyle: { color: "#e5edf7" } },
+          axisLabel: { color: "#667085" },
+          splitLine: { lineStyle: { color: "rgba(148, 163, 184, 0.22)" } },
         },
-        { type: "value", name: "шт.", nameGap: 18, axisLine: { show: false }, splitLine: { show: false } },
+        {
+          type: "value",
+          name: "шт.",
+          nameGap: 24,
+          nameTextStyle: { color: "#667085", padding: [0, 0, 8, 0] },
+          axisLine: { show: false },
+          axisLabel: { color: "#667085" },
+          splitLine: { show: false },
+        },
       ],
       series: [
-        { name: "Выручка", type: "bar", data: data.map((point) => point.revenue), barMaxWidth: 34 },
-        { name: "Заказы", type: "line", yAxisIndex: 1, smooth: true, data: data.map((point) => point.orders) },
+        {
+          name: "Выручка",
+          type: "bar",
+          data: data.map((point) => point.revenue),
+          barMaxWidth: 34,
+          itemStyle: { borderRadius: [6, 6, 0, 0] },
+        },
+        {
+          name: "Заказы",
+          type: "line",
+          yAxisIndex: 1,
+          smooth: true,
+          symbolSize: 8,
+          lineStyle: { width: 3 },
+          data: data.map((point) => point.orders),
+        },
       ],
     }),
     [data],
@@ -256,17 +322,19 @@ function SalesChart({ data }: { data: SalesPoint[] }) {
 function CategoryChart({ data }: { data: CategoryAnalyticsItem[] }) {
   const option = useMemo<ChartOption>(
     () => ({
-      color: ["#2563eb", "#16a34a", "#f59e0b", "#db2777", "#7c3aed"],
-      tooltip: { trigger: "item", formatter: "{b}: {c} ₽ ({d}%)" },
+      color: ["#2563eb", "#0f766e", "#f59e0b", "#db2777", "#7c3aed"],
+      tooltip: { trigger: "item", formatter: "{b}: {c} руб. ({d}%)", backgroundColor: "#101828", borderWidth: 0, textStyle: { color: "#ffffff" } },
       series: [
         {
           name: "Категории",
           type: "pie",
-          radius: ["45%", "67%"],
-          center: ["50%", "56%"],
+          radius: ["48%", "68%"],
+          center: ["52%", "58%"],
+          top: 18,
           avoidLabelOverlap: true,
-          label: { padding: [0, 0, 0, 4] },
-          labelLine: { length: 18, length2: 18 },
+          label: { color: "#344054", padding: [8, 0, 0, 0] },
+          labelLine: { length: 22, length2: 22, maxSurfaceAngle: 80 },
+          itemStyle: { borderColor: "#ffffff", borderWidth: 3 },
           data: data.map((item) => ({ value: item.revenue, name: item.categoryName })),
         },
       ],
@@ -285,16 +353,30 @@ function ProductsChart({ data }: { data: ProductAnalyticsItem[] }) {
   const option = useMemo<ChartOption>(
     () => ({
       color: ["#2563eb"],
-      grid: { top: 44, right: 24, bottom: 72, left: 82 },
-      tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+      grid: { top: 42, right: 24, bottom: 82, left: 82 },
+      tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, backgroundColor: "#101828", borderWidth: 0, textStyle: { color: "#ffffff" } },
       xAxis: {
         type: "category",
         data: data.map((item) => item.productName),
-        axisLabel: { rotate: 24, interval: 0 },
+        axisLabel: { rotate: 24, interval: 0, color: "#667085" },
+        axisTick: { show: false },
         axisLine: { lineStyle: { color: "#cbd5e1" } },
       },
-      yAxis: { type: "value", axisLine: { show: false }, splitLine: { lineStyle: { color: "#e5edf7" } } },
-      series: [{ name: "Выручка", type: "bar", data: data.map((item) => item.revenue), barMaxWidth: 42 }],
+      yAxis: {
+        type: "value",
+        axisLine: { show: false },
+        axisLabel: { color: "#667085" },
+        splitLine: { lineStyle: { color: "rgba(148, 163, 184, 0.22)" } },
+      },
+      series: [
+        {
+          name: "Выручка",
+          type: "bar",
+          data: data.map((item) => item.revenue),
+          barMaxWidth: 42,
+          itemStyle: { borderRadius: [6, 6, 0, 0] },
+        },
+      ],
     }),
     [data],
   );
@@ -313,14 +395,15 @@ function ProductList({ products }: { products: ProductAnalyticsItem[] }) {
 
   return (
     <div className={styles.productList}>
-      {products.map((product) => (
+      {products.map((product, index) => (
         <div className={styles.productRow} key={product.productId}>
+          <span className={styles.rank}>{String(index + 1).padStart(2, "0")}</span>
           <div>
             <strong>{product.productName}</strong>
             <span>{product.categoryName}</span>
           </div>
           <div className={styles.productValue}>
-            <strong>{formatter.format(product.revenue)} ₽</strong>
+            <strong>{formatMoney(product.revenue)}</strong>
             <span>{product.unitsSold} шт.</span>
           </div>
         </div>
@@ -331,6 +414,20 @@ function ProductList({ products }: { products: ProductAnalyticsItem[] }) {
 
 function EmptyChartState() {
   return <div className={styles.chartEmptyState}>Нет данных для выбранных фильтров</div>;
+}
+
+function LoadingDashboard() {
+  return (
+    <div className={styles.loadingGrid} aria-label="Загрузка аналитики">
+      {Array.from({ length: 4 }, (_, index) => (
+        <div className={styles.skeletonPanel} key={index}>
+          <span />
+          <strong />
+          <i />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function Chart({ option, ariaLabel }: { option: ChartOption; ariaLabel: string }) {
@@ -354,4 +451,12 @@ function Chart({ option, ariaLabel }: { option: ChartOption; ariaLabel: string }
   }, [option]);
 
   return <div className={styles.chart} ref={containerRef} role="img" aria-label={ariaLabel} />;
+}
+
+function formatMoney(value: number) {
+  return `${moneyFormatter.format(value)} ₽`;
+}
+
+function formatDate(value: string) {
+  return value.split("-").reverse().join(".");
 }

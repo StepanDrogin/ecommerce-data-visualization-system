@@ -14,6 +14,12 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::selection {
+  color: #ffffff;
+  background: #0f766e;
 }
 
 button,
@@ -37,7 +43,7 @@ select {
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.2);
+  outline: 3px solid rgba(15, 118, 110, 0.22);
   outline-offset: 2px;
 }
 
